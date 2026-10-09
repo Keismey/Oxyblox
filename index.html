@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Oxyblox</title>
+<meta name="description" content="Construis ton vaisseau bloc par bloc, fais revivre une planète morte et affronte ses gardiens. Un shoot'em up de Keismey Studio, jouable dans le navigateur.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#05070d">
+<link rel="icon" href="icons/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Oxyblox">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Oxyblox">
+<meta property="og:description" content="Construis. Tire. Respire. Un shoot'em up de Keismey Studio.">
+<meta property="og:image" content="https://keismey.github.io/Oxyblox/icons/icon-512.png">
+<link rel="preload" href="fonts/oxanium.woff" as="font" type="font/woff" crossorigin>
+<link rel="preload" href="fonts/barlow-500.woff" as="font" type="font/woff" crossorigin>
+<link rel="stylesheet" href="style.css?v=c4f9886f">
+</head><body>
+<div id="app">
+  <canvas id="bg"></canvas>
+  <header id="top">
+    <div class="res r-m" id="r-m" data-act="resInfo" data-arg="m"></div>
+    <div class="res r-c" id="r-c" data-act="resInfo" data-arg="c"></div>
+    <div class="res r-x" id="r-x" data-act="resInfo" data-arg="x"></div>
+    <div class="res r-p" id="r-p" data-act="resInfo" data-arg="p"></div>
+    <button id="gear" data-act="settings" aria-label="Réglages"></button>
+  </header>
+  <button id="obj" data-act="objGo"></button>
+  <main>
+    <section class="view" id="v-planet">
+      <canvas id="pc"></canvas>
+      <div id="plots"></div>
+      <div class="vhead">
+        <div class="vt"><div class="nmrow"><b id="pnm">KS-17</b><button class="edb" data-act="rename" data-arg="planet" aria-label="Renommer la planète"></button></div><span>Planète tellurique · orbite basse</span></div>
+        <button class="btn sm cyan" id="colAll" data-act="collectAll">Tout récupérer</button>
+      </div>
+      <button id="terra" data-act="terra" aria-label="Viabilité de la planète"></button>
+      <div id="consbar" hidden></div>
+    </section>
+    <section class="view" id="v-ship" hidden></section>
+    <section class="view" id="v-expe" hidden></section>
+  </main>
+  <nav>
+    <button id="t-planet" data-act="tab" data-arg="planet"></button>
+    <button id="t-ship" data-act="tab" data-arg="ship"></button>
+    <button id="t-expe" data-act="tab" data-arg="expe"></button>
+  </nav>
+  <div id="toast" aria-live="polite"></div>
+  <div id="flash"></div>
+  <div id="scrim" data-act="closeSheet"></div>
+  <div id="sheet"><div class="grab"></div><button class="shx" data-act="closeSheet" aria-label="Fermer"></button><div id="sheetc"></div></div>
+  <div id="modal" hidden role="dialog" aria-modal="true"><div class="mbox" id="mbox"></div></div>
+  <div id="rot"><svg viewBox="0 0 24 24"><path d="M7 3h10v18H7z M11 18h2"/></svg><span></span></div>
+  <div id="spl">
+    <div class="tt">
+      <div><h1>Oxy<em>blox</em></h1><div class="sub" id="spltag">Construis. Tire. Respire.</div></div>
+      <div class="go" id="splgo"></div>
+    </div>
+    <div class="lg"><img src="a/logo.webp" alt="Keismey Studio"></div>
+  </div>
+</div>
+
+<script src="game.js?v=c4f9886f"></script>
+
+</body></html>
