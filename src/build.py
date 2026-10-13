@@ -12,6 +12,9 @@ JS_FILES = ['g1_core.js', 'g2_planet.js', 'g2b_globe.js', 'g3_hangar.js', 'g4_fl
 IMG = {'MAPS': ['map%d.webp' % k for k in range(5)], 'BGS': ['bg%d.webp' % k for k in range(1, 6)], 'BOSSES': ['boss%d.webp' % k for k in range(1, 6)]}
 MUSIC = {'calm': 'mus_calm.mp3', 'mission': 'mus_mission.mp3', 'boss': 'mus_boss.mp3'}
 
+# Suivi Cloudflare Web Analytics (version publiée uniquement, pas l'aperçu de test)
+CF_ANALYTICS = """<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "cdb82226cd1b401d9e4f4e899f9b8425"}'></script><!-- End Cloudflare Web Analytics -->"""
+
 def read(p): return open(p, encoding='utf-8').read()
 def data_uri(name):
     mime = 'audio/mpeg' if name.endswith('.mp3') else 'image/webp'
@@ -69,11 +72,11 @@ def strip_head(shell):
 def site():
     js, css, shell = assemble(inline=False)
     css = FONT_CSS + css
-    h = hashlib.sha1((js + css + shell).encode()).hexdigest()[:8]
+    h = hashlib.sha1((js + css + shell + CF_ANALYTICS).encode()).hexdigest()[:8]
     ver = re.search(r"const VERSION='([^']+)'", js).group(1)
     body = strip_head(shell).replace('<script>\n/*JS*/\n</script>', '<script src="game.js?v=%s"></script>' % h)
     assert 'game.js' in body, 'balise script introuvable dans shell.html'
-    open(os.path.join(ROOT, 'index.html'), 'w', encoding='utf-8').write(HEAD % h + body + '\n</body></html>\n')
+    open(os.path.join(ROOT, 'index.html'), 'w', encoding='utf-8').write(HEAD % h + body + '\n' + CF_ANALYTICS + '\n</body></html>\n')
     open(os.path.join(ROOT, 'game.js'), 'w', encoding='utf-8').write(js)
     open(os.path.join(ROOT, 'style.css'), 'w', encoding='utf-8').write(css)
     files = ['./', './index.html', './game.js?v=' + h, './style.css?v=' + h, './manifest.webmanifest']
