@@ -1,3 +1,8 @@
+/* ---------- notes de mise à jour (la plus récente en premier) ---------- */
+const PATCH_NOTES=[
+ {v:'1.0.1',d:['16 octobre 2026','16 October 2026'],fr:['Nouveau : ces notes de mise à jour, dans les Réglages. Elles s’affichent une fois après chaque mise à jour.'],en:['New: these patch notes, in Settings. They show once after each update.']},
+ {v:'1.0',d:['9 octobre 2026','9 October 2026'],fr:['Première version : terraformation de la planète, hangar, missions de vol et colons.'],en:['First release: planet terraforming, the hangar, flight missions and colonists.']},
+];
 
 /* ---------- UI génériques ---------- */
 function toast(t,k=''){if(SIM)return;const d=document.createElement('div');d.className='tst '+k;d.textContent=t;$('toast').appendChild(d);setTimeout(()=>d.remove(),2900);while($('toast').children.length>3)$('toast').firstChild.remove()}
@@ -113,11 +118,15 @@ Object.assign(SHEETS,{
   <div class="kv"><div><span>Habitats</span><b>${tl(`niveau ${hab} · ${BAL.habCap*hab} places`,`level ${hab} · ${BAL.habCap*hab} berths`)}</b></div><div><span>${tl('Colons','Colonists')}</span><b class="r-p">${Math.floor(S.res.p)} / ${popCap()}</b></div><div><span>${tl('Arrivées','Arrivals')}</span><b>${hab?(S.res.p<popCap()?f1(popRate()*60)+'/h':tl('complet','full')):'—'}</b></div></div>
   <div class="kv">${[2,3,4,5].map(l=>`<div><span>${tl('Module niveau','Module level')} ${l}</span><b>${BAL.crewReq[l]} ${RES.p.n}</b></div>`).join('')}</div>
   ${nx?`<p class="desc">${tl(`<b>Prochain palier : ${nx.n}</b> à ${BAL.stageV[st+1]} % de viabilité.`,`<b>Next stage: ${nx.n}</b> at ${BAL.stageV[st+1]}% viability.`)}</p>`:`<p class="desc" style="color:var(--green)">${tl(`${PN()} est viable.`,`${PN()} is viable.`)}</p>`}`},
+ notes:()=>{S.pnV=VERSION;return `<div class="sh-h"><div class="big" style="background:#ffffff08">${ic('gear')}</div><div><h3>${tl('Notes de mise à jour','Patch notes')}</h3><p>Oxyblox · v${VERSION}</p></div></div>
+  ${PATCH_NOTES.map((n,i)=>`<details${i?'':' open'} style="margin-bottom:8px"><summary style="cursor:pointer"><b>${tl('Version','Version')} ${n.v}</b> · ${tl(n.d[0],n.d[1])}</summary><ul style="margin:6px 0 0;padding-left:20px">${(LANG==='en'?n.en:n.fr).map(l=>`<li class="desc" style="margin-bottom:4px">${l}</li>`).join('')}</ul></details>`).join('')}
+  <button class="btn ghost wide" data-act="settings">${tl('Retour aux réglages','Back to settings')}</button>`},
  settings:()=>`<div class="sh-h"><div class="big" style="background:#ffffff08">${ic('gear')}</div><div><h3>${tl('Réglages','Settings')}</h3><p>Oxyblox · v${VERSION}${DEV?' (prototype)':''}</p></div></div>
   <div class="volr"><span>${tl('Langue','Language')}</span><div class="seg2" style="grid-column:span 2"><button class="${LANG==='fr'?'on':''}" data-act="lang" data-arg="fr">Français</button><button class="${LANG==='en'?'on':''}" data-act="lang" data-arg="en">English</button></div></div>
   ${[['mus',tl('Musique','Music')],['sfx',tl('Effets sonores','Sound effects')]].map(([k,l])=>`<label class="volr"><span>${l}</span><input type="range" id="vol-${k}" min="0" max="100" step="5" value="${Math.round(S.vol[k]*100)}" data-vol="${k}"><output>${Math.round(S.vol[k]*100)}${PCT()}</output></label>`).join('')}
   ${DEV?`<button class="tog" data-act="togTest"><span>${tl('Mode test','Test mode')}<small>${tl('Production et chantiers ×20, Zone infinie ouverte, bouton pour finir les chantiers.','Output and construction ×20, Endless Zone open, button to finish constructions.')}</small></span><span class="sw ${S.test?'on':''}"></span></button>
   ${S.test?`<button class="btn ghost wide" data-act="testRes">${tl('+5 000 métal et cristal, +100 xéno','+5,000 metal and crystal, +100 xeno')}</button><button class="btn ghost wide" data-act="testTerra">${tl('Planète viable et habitats pleins','Viable planet and full habitats')}</button><button class="btn ghost wide" data-act="testBp">${tl('Débloquer tous les schémas et secteurs','Unlock all schematics and sectors')}</button>`:''}`:''}
+  <button class="btn ghost wide" data-act="notes">${tl('Notes de mise à jour','Patch notes')}</button>
   <div class="sep"></div>
   <button class="btn red wide" data-act="reset">${SHEET&&SHEET.confirm==='reset'?tl('Confirmer : tout effacer','Confirm: erase everything'):tl('Recommencer une partie','Start a new game')}</button>`
 });
@@ -136,6 +145,7 @@ Object.assign(ACT,{
  finishCons:()=>{if(!DEV)return;if(S.cons){S.cons.end=Date.now()-1;econ(0)}},
  terra:()=>{SFX.click();openSheet('terra')},
  settings:()=>{SFX.click();openSheet('settings')},
+ notes:()=>{SFX.click();openSheet('notes');save()},
  togTest:()=>{if(!DEV)return;S.test=!S.test;renderSheet();toast(S.test?tl('Mode test activé','Test mode on'):tl('Mode test désactivé','Test mode off'),'amb');if(view==='expe')renderExpe();if(view==='ship')renderShip()},
  testRes:()=>{if(!DEV)return;gain({m:5000,c:5000,x:100});toast(tl('Ressources de test ajoutées','Test resources added'),'amb')},
  testTerra:()=>{if(!DEV)return;const put=(id,L)=>{let i=plotOf(id);if(i<0)i=S.plots.findIndex(p=>!p);if(i<0)return;S.plots[i]={id,lvl:L,buf:0}};put('atmo',5);put('water',5);put('bio',5);put('habitat',10);S.res.p=popCap();pTex=null;planetTex();plotSig='';renderPlots(true);renderTerra();renderSheet();toast(tl('Planète viable, 120 colons','Viable planet, 120 colonists'),'amb')},
@@ -308,7 +318,7 @@ function boot(d){
  const spl=$('spl'),lg=spl.querySelector('.lg');let st=0;
  const toT=()=>{if(st)return;st=1;lg.style.opacity=0;setTimeout(()=>lg.remove(),700)};
  setTimeout(toT,2200);
- spl.addEventListener('pointerdown',e=>{e.stopPropagation();ac();if(!st){toT();return}if(st===2)return;st=2;spl.classList.add('out');setTimeout(()=>spl.remove(),650);if(fresh){S.intro=1;intro()}});
+ spl.addEventListener('pointerdown',e=>{e.stopPropagation();ac();if(!st){toT();return}if(st===2)return;st=2;spl.classList.add('out');setTimeout(()=>spl.remove(),650);if(fresh){S.intro=1;S.pnV=VERSION;intro()}else if(S.pnV!==VERSION)setTimeout(()=>{openSheet('notes');save()},700)});
  requestAnimationFrame(loop);
  swInit();
 }
