@@ -46,6 +46,21 @@ HEAD = """<!doctype html>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Oxyblox</title>
 <meta name="description" content="Construis ton vaisseau bloc par bloc, fais revivre une planète morte et affronte ses gardiens. Un shoot'em up de Keismey Studio, jouable dans le navigateur.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Keismey Studio">
+<meta property="og:title" content="Oxyblox">
+<meta property="og:description" content="Construis ton vaisseau bloc par bloc, fais revivre une planète morte et affronte ses gardiens. Gratuit, sans pub, dans le navigateur.">
+<meta property="og:url" content="https://keismey.github.io/Oxyblox/">
+<meta property="og:image" content="https://keismey.github.io/Oxyblox/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Oxyblox · Keismey Studio">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:locale:alternate" content="en_GB">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Oxyblox">
+<meta name="twitter:description" content="Construis ton vaisseau bloc par bloc, fais revivre une planète morte et affronte ses gardiens. Gratuit, sans pub, dans le navigateur.">
+<meta name="twitter:image" content="https://keismey.github.io/Oxyblox/og.jpg">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#05070d">
 <link rel="icon" href="icons/favicon.png" type="image/png">
@@ -54,10 +69,6 @@ HEAD = """<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Oxyblox">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Oxyblox">
-<meta property="og:description" content="Construis. Tire. Respire. Un shoot'em up de Keismey Studio.">
-<meta property="og:image" content="https://keismey.github.io/Oxyblox/icons/icon-512.png">
 <link rel="preload" href="fonts/oxanium.woff" as="font" type="font/woff" crossorigin>
 <link rel="preload" href="fonts/barlow-500.woff" as="font" type="font/woff" crossorigin>
 <link rel="stylesheet" href="style.css?v=%s">
