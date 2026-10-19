@@ -8,7 +8,7 @@ import base64, hashlib, os, re, sys
 
 SRC = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(SRC)
-JS_FILES = ['ks-back.js', 'g1_core.js', 'g2_planet.js', 'g2b_globe.js', 'g3_hangar.js', 'g4_flight.js', 'g6_audio.js', 'g7_lang.js', 'g5_ui.js', 'g8_back.js']
+JS_FILES = ['ks-studio.js', 'ks-back.js', 'g1_core.js', 'g2_planet.js', 'g2b_globe.js', 'g3_hangar.js', 'g4_flight.js', 'g6_audio.js', 'g7_lang.js', 'g5_ui.js', 'g8_back.js']
 IMG = {'MAPS': ['map%d.webp' % k for k in range(5)], 'BGS': ['bg%d.webp' % k for k in range(1, 6)], 'BOSSES': ['boss%d.webp' % k for k in range(1, 6)]}
 MUSIC = {'calm': 'mus_calm.mp3', 'mission': 'mus_mission.mp3', 'boss': 'mus_boss.mp3'}
 

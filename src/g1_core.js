@@ -1,6 +1,6 @@
 'use strict';
 const DEV=/*DEV*/true;
-const VERSION='1.0.2';
+const VERSION='1.0.3';
 const $=id=>document.getElementById(id);
 /* ---------- langue ---------- */
 const LANG_KEY='oxyblox-lang';

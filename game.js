@@ -1,3 +1,149 @@
+/* Keismey Studio — outils communs aux jeux du hub (même fichier dans chaque jeu).
+
+   KS.support()                      ouvre la page de soutien (Ko-fi) dans un nouvel onglet
+   KS.bug(jeu, lang)                 ouvre le formulaire du hub, type « Bug », titre prérempli avec le nom du jeu
+   KS.saveDialog({ jeu, keys, lang })
+                                     fenêtre « Sauvegarde » : exporter (code à copier ou fichier) et importer.
+                                     keys = clés localStorage de la partie ; la première est la sauvegarde principale.
+   Au premier toucher, le jeu demande au navigateur de garder ses données (stockage persistant).
+
+   Import : le code est rangé, la page se recharge, et ce fichier l'écrit dans le stockage AVANT
+   que le jeu ne démarre (le jeu ne peut donc pas l'écraser en sauvegardant au moment de quitter). */
+(function () {
+  'use strict';
+  var DIR = location.pathname.split('/')[1] || '';
+  var PENDING = 'ks-import:' + DIR;
+
+  // 1. import en attente : appliqué avant le jeu
+  try {
+    var p = sessionStorage.getItem(PENDING);
+    if (p) {
+      sessionStorage.removeItem(PENDING);
+      var d = JSON.parse(p);
+      Object.keys(d).forEach(function (k) {
+        if (d[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, d[k]);
+      });
+    }
+  } catch (e) {}
+
+  // 2. stockage persistant, demandé une fois au premier geste du joueur
+  var asked = false;
+  function persist(e) {
+    if (asked || (e && e.isTrusted === false)) return;
+    asked = true;
+    try {
+      if (navigator.storage && navigator.storage.persist && navigator.storage.persisted)
+        navigator.storage.persisted().then(function (ok) { if (!ok) navigator.storage.persist().catch(function () {}); }).catch(function () {});
+    } catch (err) {}
+  }
+  window.addEventListener('pointerup', persist, true);
+  window.addEventListener('keydown', persist, true);
+
+  // 3. textes
+  var TX = {
+    fr: { title: 'Sauvegarde', intro: 'Garde ce code ou le fichier en lieu sûr : il permet de retrouver ta partie sur un autre appareil ou après avoir effacé les données du navigateur.',
+      copy: 'Copier le code', copied: 'Code copié', file: 'Télécharger le fichier', load: 'Charger une partie',
+      paste: 'Colle un code de sauvegarde, ou choisis un fichier.', pick: 'Choisir un fichier', go: 'Charger',
+      confirm: 'Remplacer ta partie actuelle par celle-ci ? Ta partie actuelle sera perdue.', yes: 'Oui, remplacer', no: 'Annuler',
+      bad: 'Code invalide, ou code d’un autre jeu.', close: 'Fermer', empty: 'Aucune partie à sauvegarder pour l’instant.' },
+    en: { title: 'Save', intro: 'Keep this code or the file somewhere safe: it lets you get your game back on another device or after clearing your browser data.',
+      copy: 'Copy the code', copied: 'Code copied', file: 'Download the file', load: 'Load a game',
+      paste: 'Paste a save code, or choose a file.', pick: 'Choose a file', go: 'Load',
+      confirm: 'Replace your current game with this one? Your current game will be lost.', yes: 'Yes, replace', no: 'Cancel',
+      bad: 'Invalid code, or a code from another game.', close: 'Close', empty: 'No game to save yet.' }
+  };
+
+  // 4. code de sauvegarde : KS1.<jeu>.<base64 du JSON>
+  function b64e(s) { return btoa(unescape(encodeURIComponent(s))); }
+  function b64d(s) { return decodeURIComponent(escape(atob(s))); }
+  function makeCode(keys) {
+    var d = {}, any = false;
+    keys.forEach(function (k) { var v = null; try { v = localStorage.getItem(k); } catch (e) {} d[k] = v; if (v !== null) any = true; });
+    return any ? 'KS1.' + DIR + '.' + b64e(JSON.stringify(d)) : '';
+  }
+  function readCode(txt, keys) {
+    try {
+      var m = String(txt || '').replace(/\s+/g, '').match(/^KS1\.([^.]*)\.(.+)$/);
+      if (!m || m[1] !== DIR) return null;
+      var d = JSON.parse(b64d(m[2]));
+      if (!d || typeof d !== 'object' || typeof d[keys[0]] !== 'string') return null;
+      var out = {};
+      keys.forEach(function (k) { out[k] = typeof d[k] === 'string' ? d[k] : null; });
+      return out;
+    } catch (e) { return null; }
+  }
+
+  // 5. fenêtre commune (neutre, sur fond sombre ; la police est celle du jeu)
+  var CSS = '#ks-dlg{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.66);font:inherit;color:#f3ecdf}' +
+    '#ks-dlg .kb{width:min(100%,380px);max-height:calc(100% - 32px);overflow:auto;background:#1d1a22;border:2px solid var(--ks-accent,#c9a45c);border-radius:14px;padding:16px;box-shadow:0 10px 40px rgba(0,0,0,.5)}' +
+    '#ks-dlg h2{margin:0 0 8px;font-size:20px}#ks-dlg p{margin:0 0 10px;font-size:14px;line-height:1.4;opacity:.9}' +
+    '#ks-dlg textarea{width:100%;box-sizing:border-box;height:84px;margin:0 0 8px;background:#0f0d12;color:#f3ecdf;border:1px solid #4a4452;border-radius:8px;padding:8px;font:12px/1.3 monospace;resize:none}' +
+    '#ks-dlg button{display:block;width:100%;margin:0 0 8px;padding:11px 10px;border-radius:10px;border:0;font:inherit;font-weight:700;font-size:15px;background:#3a3442;color:#f3ecdf;cursor:pointer}' +
+    '#ks-dlg button.ks-main{background:var(--ks-accent,#c9a45c);color:#16121a}#ks-dlg hr{border:0;border-top:1px solid #3a3442;margin:12px 0}' +
+    '#ks-dlg .ks-err{color:#ff8f7a}';
+
+  function saveDialog(o) {
+    var L = TX[o.lang === 'en' ? 'en' : 'fr'], keys = o.keys;
+    if (document.getElementById('ks-dlg')) return;
+    if (!document.getElementById('ks-css')) { var st = document.createElement('style'); st.id = 'ks-css'; st.textContent = CSS; document.head.appendChild(st); }
+    if (o.save) try { o.save(); } catch (e) {}
+    var code = makeCode(keys);
+    var d = document.createElement('div'); d.id = 'ks-dlg'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+    if (o.accent) d.style.setProperty('--ks-accent', o.accent);
+    d.innerHTML = '<div class="kb"><h2>' + L.title + '</h2>' +
+      (code ? '<p>' + L.intro + '</p><textarea readonly id="ks-out"></textarea><button class="ks-main" id="ks-copy">' + L.copy + '</button><button id="ks-file">' + L.file + '</button>' : '<p>' + L.empty + '</p>') +
+      '<hr><h2>' + L.load + '</h2><p>' + L.paste + '</p><textarea id="ks-in" autocomplete="off" spellcheck="false" placeholder="KS1…"></textarea>' +
+      '<button id="ks-pick">' + L.pick + '</button><button class="ks-main" id="ks-go">' + L.go + '</button><p class="ks-err" id="ks-msg" hidden></p>' +
+      '<hr><button id="ks-close">' + L.close + '</button><input type="file" id="ks-f" accept=".txt,text/plain" hidden></div>';
+    document.body.appendChild(d);
+    var $ = function (id) { return d.querySelector('#' + id); };
+    var close = function () { d.remove(); };
+    if (code) {
+      $('ks-out').value = code;
+      $('ks-copy').onclick = function () {
+        var done = function () { $('ks-copy').textContent = L.copied; };
+        try { navigator.clipboard.writeText(code).then(done, function () { $('ks-out').select(); document.execCommand('copy'); done(); }); }
+        catch (e) { $('ks-out').select(); try { document.execCommand('copy'); done(); } catch (err) {} }
+      };
+      $('ks-file').onclick = function () {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([code], { type: 'text/plain' }));
+        a.download = (o.file || DIR) + '-sauvegarde-' + new Date().toISOString().slice(0, 10) + '.txt';
+        document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+      };
+    }
+    $('ks-pick').onclick = function () { $('ks-f').click(); };
+    $('ks-f').onchange = function () {
+      var f = $('ks-f').files[0]; if (!f) return;
+      var r = new FileReader(); r.onload = function () { $('ks-in').value = String(r.result).trim(); }; r.readAsText(f);
+    };
+    $('ks-go').onclick = function () {
+      var data = readCode($('ks-in').value, keys), msg = $('ks-msg');
+      if (!data) { msg.textContent = L.bad; msg.hidden = false; return; }
+      if ($('ks-go').dataset.sure !== '1') {
+        msg.textContent = L.confirm; msg.hidden = false;
+        $('ks-go').textContent = L.yes; $('ks-go').dataset.sure = '1';
+        return;
+      }
+      try { sessionStorage.setItem(PENDING, JSON.stringify(data)); } catch (e) { return; }
+      location.reload();
+    };
+    $('ks-close').onclick = close;
+    d.addEventListener('pointerdown', function (e) { if (e.target === d) close(); });
+    d.ksClose = close;
+  }
+
+  window.KS = {
+    SUPPORT_URL: 'https://ko-fi.com/keismey',
+    support: function () { window.open('https://ko-fi.com/keismey', '_blank', 'noopener'); },
+    bugUrl: function (jeu, lang) { return '/?contact=bug&jeu=' + encodeURIComponent(jeu || '') + (lang === 'en' ? '&lang=en' : '&lang=fr'); },
+    bug: function (jeu, lang) { location.assign(window.KS.bugUrl(jeu, lang)); },
+    saveDialog: saveDialog,
+    // pour le bouton retour : la fenêtre « Sauvegarde » est-elle ouverte ? la ferme si oui.
+    closeDialog: function () { var d = document.getElementById('ks-dlg'); if (!d) return false; d.remove(); return true; }
+  };
+})();
+
 /* Keismey Studio — bouton retour du téléphone (même fichier dans chaque jeu du hub).
 
    Le jeu appelle KSBack.init({ back, lang }) :
@@ -80,6 +226,7 @@
 
   function back(fromKey) {
     var r;
+    if (window.KS && window.KS.closeDialog && window.KS.closeDialog()) return;   // fenêtre « Sauvegarde » commune
     try { r = cfg.back(); } catch (e) { r = null; if (window.console) console.error(e); }
     if (r === 'hub' && !fromKey) toHub();
   }
@@ -122,7 +269,7 @@
 
 'use strict';
 const DEV=false;
-const VERSION='1.0.2';
+const VERSION='1.0.3';
 const $=id=>document.getElementById(id);
 /* ---------- langue ---------- */
 const LANG_KEY='oxyblox-lang';
@@ -1337,6 +1484,7 @@ function setLang(l){
 
 /* ---------- notes de mise à jour (la plus récente en premier) ---------- */
 const PATCH_NOTES=[
+ {v:'1.0.3',d:['19 octobre 2026','19 October 2026'],fr:['Réglages : sauvegarde à exporter ou importer, signaler un bug, soutenir le studio, retour à l’écran titre.'],en:['Settings: save export and import, bug report, support the studio, back to the title screen.']},
  {v:'1.0.2',d:['19 octobre 2026','19 October 2026'],fr:['Le bouton retour du téléphone ne quitte plus le jeu d’un coup : il ferme les fenêtres, met le vol en pause, revient à la planète, puis propose de revenir à l’écran titre. Depuis l’écran titre, il propose d’aller au hub Keismey Studio.'],en:['The phone’s back button no longer leaves the game at once: it closes windows, pauses the flight, returns to the planet, then offers to go back to the title screen. From the title screen, it offers to go to the Keismey Studio hub.']},
  {v:'1.0.1',d:['16 octobre 2026','16 October 2026'],fr:['Nouveau : ces notes de mise à jour, dans les Réglages. Elles s’affichent une fois après chaque mise à jour.'],en:['New: these patch notes, in Settings. They show once after each update.']},
  {v:'1.0',d:['9 octobre 2026','9 October 2026'],fr:['Première version : terraformation de la planète, hangar, missions de vol et colons.'],en:['First release: planet terraforming, the hangar, flight missions and colonists.']},
@@ -1459,12 +1607,16 @@ Object.assign(SHEETS,{
  notes:()=>{S.pnV=VERSION;return `<div class="sh-h"><div class="big" style="background:#ffffff08">${ic('gear')}</div><div><h3>${tl('Notes de mise à jour','Patch notes')}</h3><p>Oxyblox · v${VERSION}</p></div></div>
   ${PATCH_NOTES.map((n,i)=>`<details${i?'':' open'} style="margin-bottom:8px"><summary style="cursor:pointer"><b>${tl('Version','Version')} ${n.v}</b> · ${tl(n.d[0],n.d[1])}</summary><ul style="margin:6px 0 0;padding-left:20px">${(LANG==='en'?n.en:n.fr).map(l=>`<li class="desc" style="margin-bottom:4px">${l}</li>`).join('')}</ul></details>`).join('')}
   <button class="btn ghost wide" data-act="settings">${tl('Retour aux réglages','Back to settings')}</button>`},
- settings:()=>`<div class="sh-h"><div class="big" style="background:#ffffff08">${ic('gear')}</div><div><h3>${tl('Réglages','Settings')}</h3><p>Oxyblox · v${VERSION}${DEV?' (prototype)':''}</p></div></div>
+ settings:()=>`<div class="sh-h"><div class="big" style="background:#ffffff08">${ic('gear')}</div><div><h3>${tl('Réglages','Settings')}</h3><p>Oxyblox · v${VERSION}${DEV?' (prototype)':''} · Keismey Studio</p></div></div>
   <div class="volr"><span>${tl('Langue','Language')}</span><div class="seg2" style="grid-column:span 2"><button class="${LANG==='fr'?'on':''}" data-act="lang" data-arg="fr">Français</button><button class="${LANG==='en'?'on':''}" data-act="lang" data-arg="en">English</button></div></div>
   ${[['mus',tl('Musique','Music')],['sfx',tl('Effets sonores','Sound effects')]].map(([k,l])=>`<label class="volr"><span>${l}</span><input type="range" id="vol-${k}" min="0" max="100" step="5" value="${Math.round(S.vol[k]*100)}" data-vol="${k}"><output>${Math.round(S.vol[k]*100)}${PCT()}</output></label>`).join('')}
   ${DEV?`<button class="tog" data-act="togTest"><span>${tl('Mode test','Test mode')}<small>${tl('Production et chantiers ×20, Zone infinie ouverte, bouton pour finir les chantiers.','Output and construction ×20, Endless Zone open, button to finish constructions.')}</small></span><span class="sw ${S.test?'on':''}"></span></button>
   ${S.test?`<button class="btn ghost wide" data-act="testRes">${tl('+5 000 métal et cristal, +100 xéno','+5,000 metal and crystal, +100 xeno')}</button><button class="btn ghost wide" data-act="testTerra">${tl('Planète viable et habitats pleins','Viable planet and full habitats')}</button><button class="btn ghost wide" data-act="testBp">${tl('Débloquer tous les schémas et secteurs','Unlock all schematics and sectors')}</button>`:''}`:''}
   <button class="btn ghost wide" data-act="notes">${tl('Notes de mise à jour','Patch notes')}</button>
+  <button class="btn ghost wide" data-act="saveIo">${tl('Sauvegarde : exporter, importer','Save: export, import')}</button>
+  <button class="btn ghost wide" data-act="bug">${tl('Signaler un bug','Report a bug')}</button>
+  <button class="btn ghost wide" data-act="support">${tl('Soutenir le studio','Support the studio')}</button>
+  <button class="btn ghost wide" data-act="toTitle">${tl('Écran titre','Title screen')}</button>
   <div class="sep"></div>
   <button class="btn red wide" data-act="reset">${SHEET&&SHEET.confirm==='reset'?tl('Confirmer : tout effacer','Confirm: erase everything'):tl('Recommencer une partie','Start a new game')}</button>`
 });
@@ -1483,6 +1635,10 @@ Object.assign(ACT,{
  finishCons:()=>{if(!DEV)return;if(S.cons){S.cons.end=Date.now()-1;econ(0)}},
  terra:()=>{SFX.click();openSheet('terra')},
  settings:()=>{SFX.click();openSheet('settings')},
+ saveIo:()=>{SFX.click();save();KS.saveDialog({lang:LANG,keys:[KEY],save,file:'oxyblox',accent:'#f2b544'})},
+ bug:()=>KS.bug('Oxyblox',LANG),
+ support:()=>KS.support(),
+ toTitle:()=>{closeSheet();titleAgain()},
  notes:()=>{SFX.click();openSheet('notes');save()},
  togTest:()=>{if(!DEV)return;S.test=!S.test;renderSheet();toast(S.test?tl('Mode test activé','Test mode on'):tl('Mode test désactivé','Test mode off'),'amb');if(view==='expe')renderExpe();if(view==='ship')renderShip()},
  testRes:()=>{if(!DEV)return;gain({m:5000,c:5000,x:100});toast(tl('Ressources de test ajoutées','Test resources added'),'amb')},

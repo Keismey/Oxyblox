@@ -1,5 +1,6 @@
 /* ---------- notes de mise à jour (la plus récente en premier) ---------- */
 const PATCH_NOTES=[
+ {v:'1.0.3',d:['19 octobre 2026','19 October 2026'],fr:['Réglages : sauvegarde à exporter ou importer, signaler un bug, soutenir le studio, retour à l’écran titre.'],en:['Settings: save export and import, bug report, support the studio, back to the title screen.']},
  {v:'1.0.2',d:['19 octobre 2026','19 October 2026'],fr:['Le bouton retour du téléphone ne quitte plus le jeu d’un coup : il ferme les fenêtres, met le vol en pause, revient à la planète, puis propose de revenir à l’écran titre. Depuis l’écran titre, il propose d’aller au hub Keismey Studio.'],en:['The phone’s back button no longer leaves the game at once: it closes windows, pauses the flight, returns to the planet, then offers to go back to the title screen. From the title screen, it offers to go to the Keismey Studio hub.']},
  {v:'1.0.1',d:['16 octobre 2026','16 October 2026'],fr:['Nouveau : ces notes de mise à jour, dans les Réglages. Elles s’affichent une fois après chaque mise à jour.'],en:['New: these patch notes, in Settings. They show once after each update.']},
  {v:'1.0',d:['9 octobre 2026','9 October 2026'],fr:['Première version : terraformation de la planète, hangar, missions de vol et colons.'],en:['First release: planet terraforming, the hangar, flight missions and colonists.']},
@@ -122,12 +123,16 @@ Object.assign(SHEETS,{
  notes:()=>{S.pnV=VERSION;return `<div class="sh-h"><div class="big" style="background:#ffffff08">${ic('gear')}</div><div><h3>${tl('Notes de mise à jour','Patch notes')}</h3><p>Oxyblox · v${VERSION}</p></div></div>
   ${PATCH_NOTES.map((n,i)=>`<details${i?'':' open'} style="margin-bottom:8px"><summary style="cursor:pointer"><b>${tl('Version','Version')} ${n.v}</b> · ${tl(n.d[0],n.d[1])}</summary><ul style="margin:6px 0 0;padding-left:20px">${(LANG==='en'?n.en:n.fr).map(l=>`<li class="desc" style="margin-bottom:4px">${l}</li>`).join('')}</ul></details>`).join('')}
   <button class="btn ghost wide" data-act="settings">${tl('Retour aux réglages','Back to settings')}</button>`},
- settings:()=>`<div class="sh-h"><div class="big" style="background:#ffffff08">${ic('gear')}</div><div><h3>${tl('Réglages','Settings')}</h3><p>Oxyblox · v${VERSION}${DEV?' (prototype)':''}</p></div></div>
+ settings:()=>`<div class="sh-h"><div class="big" style="background:#ffffff08">${ic('gear')}</div><div><h3>${tl('Réglages','Settings')}</h3><p>Oxyblox · v${VERSION}${DEV?' (prototype)':''} · Keismey Studio</p></div></div>
   <div class="volr"><span>${tl('Langue','Language')}</span><div class="seg2" style="grid-column:span 2"><button class="${LANG==='fr'?'on':''}" data-act="lang" data-arg="fr">Français</button><button class="${LANG==='en'?'on':''}" data-act="lang" data-arg="en">English</button></div></div>
   ${[['mus',tl('Musique','Music')],['sfx',tl('Effets sonores','Sound effects')]].map(([k,l])=>`<label class="volr"><span>${l}</span><input type="range" id="vol-${k}" min="0" max="100" step="5" value="${Math.round(S.vol[k]*100)}" data-vol="${k}"><output>${Math.round(S.vol[k]*100)}${PCT()}</output></label>`).join('')}
   ${DEV?`<button class="tog" data-act="togTest"><span>${tl('Mode test','Test mode')}<small>${tl('Production et chantiers ×20, Zone infinie ouverte, bouton pour finir les chantiers.','Output and construction ×20, Endless Zone open, button to finish constructions.')}</small></span><span class="sw ${S.test?'on':''}"></span></button>
   ${S.test?`<button class="btn ghost wide" data-act="testRes">${tl('+5 000 métal et cristal, +100 xéno','+5,000 metal and crystal, +100 xeno')}</button><button class="btn ghost wide" data-act="testTerra">${tl('Planète viable et habitats pleins','Viable planet and full habitats')}</button><button class="btn ghost wide" data-act="testBp">${tl('Débloquer tous les schémas et secteurs','Unlock all schematics and sectors')}</button>`:''}`:''}
   <button class="btn ghost wide" data-act="notes">${tl('Notes de mise à jour','Patch notes')}</button>
+  <button class="btn ghost wide" data-act="saveIo">${tl('Sauvegarde : exporter, importer','Save: export, import')}</button>
+  <button class="btn ghost wide" data-act="bug">${tl('Signaler un bug','Report a bug')}</button>
+  <button class="btn ghost wide" data-act="support">${tl('Soutenir le studio','Support the studio')}</button>
+  <button class="btn ghost wide" data-act="toTitle">${tl('Écran titre','Title screen')}</button>
   <div class="sep"></div>
   <button class="btn red wide" data-act="reset">${SHEET&&SHEET.confirm==='reset'?tl('Confirmer : tout effacer','Confirm: erase everything'):tl('Recommencer une partie','Start a new game')}</button>`
 });
@@ -146,6 +151,10 @@ Object.assign(ACT,{
  finishCons:()=>{if(!DEV)return;if(S.cons){S.cons.end=Date.now()-1;econ(0)}},
  terra:()=>{SFX.click();openSheet('terra')},
  settings:()=>{SFX.click();openSheet('settings')},
+ saveIo:()=>{SFX.click();save();KS.saveDialog({lang:LANG,keys:[KEY],save,file:'oxyblox',accent:'#f2b544'})},
+ bug:()=>KS.bug('Oxyblox',LANG),
+ support:()=>KS.support(),
+ toTitle:()=>{closeSheet();titleAgain()},
  notes:()=>{SFX.click();openSheet('notes');save()},
  togTest:()=>{if(!DEV)return;S.test=!S.test;renderSheet();toast(S.test?tl('Mode test activé','Test mode on'):tl('Mode test désactivé','Test mode off'),'amb');if(view==='expe')renderExpe();if(view==='ship')renderShip()},
  testRes:()=>{if(!DEV)return;gain({m:5000,c:5000,x:100});toast(tl('Ressources de test ajoutées','Test resources added'),'amb')},
