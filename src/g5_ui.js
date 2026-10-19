@@ -1,5 +1,6 @@
 /* ---------- notes de mise à jour (la plus récente en premier) ---------- */
 const PATCH_NOTES=[
+ {v:'1.0.2',d:['19 octobre 2026','19 October 2026'],fr:['Le bouton retour du téléphone ne quitte plus le jeu d’un coup : il ferme les fenêtres, met le vol en pause, revient à la planète, puis propose de revenir à l’écran titre. Depuis l’écran titre, il propose d’aller au hub Keismey Studio.'],en:['The phone’s back button no longer leaves the game at once: it closes windows, pauses the flight, returns to the planet, then offers to go back to the title screen. From the title screen, it offers to go to the Keismey Studio hub.']},
  {v:'1.0.1',d:['16 octobre 2026','16 October 2026'],fr:['Nouveau : ces notes de mise à jour, dans les Réglages. Elles s’affichent une fois après chaque mise à jour.'],en:['New: these patch notes, in Settings. They show once after each update.']},
  {v:'1.0',d:['9 octobre 2026','9 October 2026'],fr:['Première version : terraformation de la planète, hangar, missions de vol et colons.'],en:['First release: planet terraforming, the hangar, flight missions and colonists.']},
 ];
@@ -273,8 +274,8 @@ ACT.rename=k=>{SFX.click();renameDlg(k)};
 document.addEventListener('keydown',e=>{
  if(e.target&&e.target.tagName==='INPUT')return;
  if(!$('modal').hidden){if((e.key==='Enter'||e.key===' ')&&!(e.target&&e.target.tagName==='BUTTON')){const b=$('mbox').querySelector('[data-mc="0"]');if(b){e.preventDefault();b.click()}}return}
- if(e.key==='Escape'&&SHEET){closeSheet();return}
- if(e.key==='Escape'&&MOVE!=null){MOVE=null;renderShip()}
+ if(e.key==='Escape'&&SHEET){e.preventDefault();closeSheet();return}
+ if(e.key==='Escape'&&MOVE!=null){e.preventDefault();MOVE=null;renderShip()}
 });
 const TIPS={
  hangar:()=>({eyebrow:tl('Aide','Help'),title:tl('Le hangar','The hangar'),html:`<p>${tl('Le nez du vaisseau est en haut. Chaque case accueille une pièce de coque et un module.','The ship’s nose points up. Each cell holds a hull part and a module.')}</p><ul class="tips"><li>${tl('<b>Case fissurée</b> : touche-la pour la réparer.','<b>Cracked cell</b>: tap it to repair it.')}</li><li>${tl('<b>Cadenas et chiffre</b> : la case se débloque à ce niveau du chantier orbital.','<b>Lock and number</b>: the cell unlocks at that orbital shipyard level.')}</li><li>${tl('<b>Puissance</b> : les modules consomment ce que fournit le réacteur.','<b>Power</b>: modules use what the reactor provides.')}</li><li>${tl('<b>Barres orange</b> : bonus entre modules voisins.','<b>Orange bars</b>: bonus between neighbouring modules.')}</li></ul>`}),

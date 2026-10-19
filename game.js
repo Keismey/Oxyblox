@@ -1,6 +1,124 @@
+/* Keismey Studio — bouton retour du téléphone (même fichier dans chaque jeu du hub).
+
+   Le jeu appelle KSBack.init({ back, lang }) :
+   - back() est appelé à chaque retour (bouton ou geste retour du téléphone, touche Échap).
+     Il ferme la fenêtre ouverte, revient à l'écran précédent, met en pause ou ouvre une
+     confirmation. Il renvoie 'hub' quand le joueur doit quitter le jeu pour le hub.
+   - lang() renvoie 'fr' ou 'en' : la langue du hub qui s'ouvre.
+   KSBack.toHub() quitte vers le hub (par exemple après une confirmation du joueur).
+
+   Le navigateur ne connaît que l'historique de l'onglet. À chaque toucher, on empile
+   quelques entrées « tampon » sur la page du jeu (Chrome ignore celles créées sans action
+   du joueur) ; chaque retour en consomme une et le jeu décide quoi faire.
+   Pour quitter : si on vient du hub, on y revient comme avec un retour normal (position
+   de défilement gardée) ; sinon le hub remplace le jeu dans l'historique, et un retour de
+   plus ramène là d'où le joueur venait. */
+(function () {
+  'use strict';
+  var N = 10;             // retours d'affilée possibles sans toucher l'écran
+  var cfg = null, idx = 0, fromHub = false, leaving = false, resetting = false, timer = 0;
+
+  function state() { try { return history.state; } catch (e) { return null; } }
+  function depth(s) { return s && typeof s.ksb === 'number' ? s.ksb : 0; }
+  function refIsHub() {
+    try {
+      var r = new URL(document.referrer);
+      return r.origin === location.origin && (r.pathname === '/' || r.pathname === '/index.html');
+    } catch (e) { return false; }
+  }
+  function mark(k) { var s = {}, o = state(); if (o && typeof o === 'object') for (var p in o) s[p] = o[p]; s.ksb = k; s.ksh = fromHub ? 1 : 0; return s; }
+
+  // changement de langue ou rechargement par le jeu : on se souvient qu'on venait du hub
+  var dir = location.pathname.split('/')[1] || '';
+  function sameGameRef() {
+    try { var r = new URL(document.referrer); return r.origin === location.origin && r.pathname.split('/')[1] === dir; } catch (e) { return false; }
+  }
+  function memo(v) { try { if (v === undefined) return sessionStorage.getItem('ks-hub:' + dir) === '1'; sessionStorage.setItem('ks-hub:' + dir, v ? '1' : '0'); } catch (e) { return false; } }
+
+  (function boot() {
+    var s = state();
+    fromHub = !!(s && s.ksh) || refIsHub() || (sameGameRef() && memo());
+    memo(fromHub);
+    idx = depth(s);
+    if (idx > 0) {
+      // page rechargée (mise à jour, glisser pour actualiser) sur une entrée tampon :
+      // on redescend à l'entrée de base pour repartir proprement.
+      resetting = true;
+      try { history.go(-idx); } catch (e) { resetting = false; }
+      return;
+    }
+    try { history.replaceState(mark(0), ''); } catch (e) {}
+  })();
+
+  function topUp() {
+    if (!cfg || leaving || resetting) return;
+    idx = depth(state());
+    try { while (idx < N) { idx++; history.pushState(mark(idx), ''); } } catch (e) {}
+  }
+
+  function finish() {
+    var url = '/' + (cfg && cfg.lang && cfg.lang() === 'en' ? '?lang=en' : '');
+    if (fromHub) {
+      history.back();
+      // filet de sécurité si aucune page ne précède le jeu
+      timer = setTimeout(function () { location.replace(url); }, 700);
+    } else {
+      location.replace(url);
+    }
+  }
+
+  function toHub() {
+    if (leaving) return;
+    leaving = true;
+    var k = depth(state());
+    if (k > 0) history.go(-k); else finish();
+  }
+
+  function back(fromKey) {
+    var r;
+    try { r = cfg.back(); } catch (e) { r = null; if (window.console) console.error(e); }
+    if (r === 'hub' && !fromKey) toHub();
+  }
+
+  window.addEventListener('popstate', function (e) {
+    var k = depth(e.state);
+    if (resetting) { if (k === 0) { resetting = false; idx = 0; } return; }
+    if (leaving) { if (k === 0) finish(); return; }
+    if (!cfg) { idx = k; return; }
+    if (k >= idx) { idx = k; return; }   // bouton « suivant » : rien à faire
+    idx = k;
+    back(false);
+  });
+
+  // chaque action du joueur réarme les entrées tampon
+  ['pointerup', 'touchend', 'click', 'keydown'].forEach(function (t) {
+    window.addEventListener(t, topUp, true);
+  });
+
+  // touche Échap sur ordinateur : même effet, sauf quitter le jeu
+  window.addEventListener('keydown', function (e) {
+    if (!cfg || e.key !== 'Escape' || e.repeat || e.defaultPrevented) return;
+    var t = e.target && e.target.tagName;
+    if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT') return;
+    back(true);
+  });
+
+  window.addEventListener('pagehide', function () { clearTimeout(timer); });
+  window.addEventListener('pageshow', function (e) {
+    if (!e.persisted) return;            // page revenue depuis le cache du navigateur
+    clearTimeout(timer); leaving = false; resetting = false; idx = depth(state());
+  });
+
+  window.KSBack = {
+    init: function (o) { cfg = o; },
+    toHub: toHub,
+    fromHub: function () { return fromHub; }
+  };
+})();
+
 'use strict';
 const DEV=false;
-const VERSION='1.0.1';
+const VERSION='1.0.2';
 const $=id=>document.getElementById(id);
 /* ---------- langue ---------- */
 const LANG_KEY='oxyblox-lang';
@@ -1215,6 +1333,7 @@ function setLang(l){
 
 /* ---------- notes de mise à jour (la plus récente en premier) ---------- */
 const PATCH_NOTES=[
+ {v:'1.0.2',d:['19 octobre 2026','19 October 2026'],fr:['Le bouton retour du téléphone ne quitte plus le jeu d’un coup : il ferme les fenêtres, met le vol en pause, revient à la planète, puis propose de revenir à l’écran titre. Depuis l’écran titre, il propose d’aller au hub Keismey Studio.'],en:['The phone’s back button no longer leaves the game at once: it closes windows, pauses the flight, returns to the planet, then offers to go back to the title screen. From the title screen, it offers to go to the Keismey Studio hub.']},
  {v:'1.0.1',d:['16 octobre 2026','16 October 2026'],fr:['Nouveau : ces notes de mise à jour, dans les Réglages. Elles s’affichent une fois après chaque mise à jour.'],en:['New: these patch notes, in Settings. They show once after each update.']},
  {v:'1.0',d:['9 octobre 2026','9 October 2026'],fr:['Première version : terraformation de la planète, hangar, missions de vol et colons.'],en:['First release: planet terraforming, the hangar, flight missions and colonists.']},
 ];
@@ -1488,8 +1607,8 @@ ACT.rename=k=>{SFX.click();renameDlg(k)};
 document.addEventListener('keydown',e=>{
  if(e.target&&e.target.tagName==='INPUT')return;
  if(!$('modal').hidden){if((e.key==='Enter'||e.key===' ')&&!(e.target&&e.target.tagName==='BUTTON')){const b=$('mbox').querySelector('[data-mc="0"]');if(b){e.preventDefault();b.click()}}return}
- if(e.key==='Escape'&&SHEET){closeSheet();return}
- if(e.key==='Escape'&&MOVE!=null){MOVE=null;renderShip()}
+ if(e.key==='Escape'&&SHEET){e.preventDefault();closeSheet();return}
+ if(e.key==='Escape'&&MOVE!=null){e.preventDefault();MOVE=null;renderShip()}
 });
 const TIPS={
  hangar:()=>({eyebrow:tl('Aide','Help'),title:tl('Le hangar','The hangar'),html:`<p>${tl('Le nez du vaisseau est en haut. Chaque case accueille une pièce de coque et un module.','The ship’s nose points up. Each cell holds a hull part and a module.')}</p><ul class="tips"><li>${tl('<b>Case fissurée</b> : touche-la pour la réparer.','<b>Cracked cell</b>: tap it to repair it.')}</li><li>${tl('<b>Cadenas et chiffre</b> : la case se débloque à ce niveau du chantier orbital.','<b>Lock and number</b>: the cell unlocks at that orbital shipyard level.')}</li><li>${tl('<b>Puissance</b> : les modules consomment ce que fournit le réacteur.','<b>Power</b>: modules use what the reactor provides.')}</li><li>${tl('<b>Barres orange</b> : bonus entre modules voisins.','<b>Orange bars</b>: bonus between neighbouring modules.')}</li></ul>`}),
@@ -1543,4 +1662,38 @@ function swInit(){
  try{navigator.serviceWorker.register('sw.js').then(r=>{if(r.waiting&&navigator.serviceWorker.controller)ban(r.waiting);r.addEventListener('updatefound',()=>{const w=r.installing;w&&w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)ban(w)})});setInterval(()=>r.update().catch(()=>{}),36e5)}).catch(()=>{})}catch(e){}
 }
 if(!window.__NOBOOT)(window.claude&&window.claude.hot&&window.claude.hot.ready?window.claude.hot.ready(boot):boot((window.claude&&window.claude.hot&&window.claude.hot.data)||{}));
+
+/* ---------- bouton retour du téléphone (voir ks-back.js) ----------
+   fenêtre ou feuille ouverte → fermée ; déplacement de module → annulé ; décollage pas encore lancé → annulé ;
+   vol → pause (un 2e retour reprend) ; hangar ou missions → planète ; planète → écran titre (confirmé) ;
+   écran titre → hub (confirmé). */
+const SPL0=$('spl')?$('spl').cloneNode(true):null;
+function backAsk(eyebrow,title,text,yes,fn,above){
+ if(above)$('modal').style.zIndex=70;
+ modal({eyebrow,title,text,choices:[{l:yes,f:()=>{$('modal').style.zIndex='';fn()}},{l:tl('Annuler','Cancel'),cls:'ghost',f:()=>{$('modal').style.zIndex=''}}]});
+}
+function titleAgain(){
+ if(!SPL0||$('spl'))return;
+ const spl=SPL0.cloneNode(true),lg=spl.querySelector('.lg');if(lg)lg.remove();
+ const tt=spl.querySelector('.tt');if(tt&&TITLE_BG)tt.style.background=`linear-gradient(#05070dcc,#05070d00 32%,#05070d00 70%,#05070dcc),url(${TITLE_BG}) center/cover`;
+ $('app').appendChild(spl);
+ let out=false;
+ spl.addEventListener('pointerdown',e=>{e.stopPropagation();if(out)return;out=true;spl.classList.add('out');setTimeout(()=>spl.remove(),650)});
+}
+function onBack(){
+ if(!$('modal').hidden){const bs=[...$('mbox').querySelectorAll('[data-mc]')];const b=bs.find(x=>x.classList.contains('ghost'))||(bs.length===1?bs[0]:bs[bs.length-1]);if(b&&!b.disabled)b.click();return}
+ const spl=$('spl');
+ if(spl&&!spl.classList.contains('out')){if(spl.querySelector('.lg'))return;backAsk('Oxyblox',tl('Quitter le jeu ?','Leave the game?'),tl('Ta partie est enregistrée. Tu retrouveras les autres jeux de Keismey Studio sur le hub.','Your game is saved. You’ll find the other Keismey Studio games on the hub.'),tl('Aller au hub','Go to the hub'),()=>KSBack.toHub(),true);return}
+ if(SHEET){closeSheet();return}
+ if(MOVE!=null){MOVE=null;renderShip();return}
+ if(view==='expe'&&SH){
+  if(!SH.started){SH=null;shPtr=null;renderExpe();return}
+  if(SH.over)return;
+  if(SH.paused)ACT.shResume();else ACT.shPause();
+  return;
+ }
+ if(view!=='planet'){setView('planet');return}
+ backAsk('Oxyblox',tl('Retour à l’écran titre ?','Back to the title screen?'),tl('Ta partie est enregistrée.','Your game is saved.'),tl('Écran titre','Title screen'),titleAgain);
+}
+KSBack.init({back:onBack,lang:()=>LANG==='en'?'en':'fr'});
 
