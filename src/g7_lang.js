@@ -62,7 +62,7 @@ function applyShell(){
  set('#v-planet .vt>span',tl('Planète tellurique · orbite basse','Rocky planet · low orbit'));
  set('#colAll',tl('Tout récupérer','Collect all'));
  const al=(sel,t)=>{const e=document.querySelector(sel);if(e)e.setAttribute('aria-label',t)};
- al('#gear',tl('Réglages','Settings'));al('#terra',tl('Viabilité de la planète','Planet viability'));al('.shx',tl('Fermer','Close'));al('#v-planet .edb',tl('Renommer la planète','Rename the planet'));
+ al('#gear',tl('Options','Options'));al('#terra',tl('Viabilité de la planète','Planet viability'));al('.shx',tl('Fermer','Close'));al('#v-planet .edb',tl('Renommer la planète','Rename the planet'));
 }
 function applyLang(){EN_DATA().forEach(([t,e])=>ovl(t,e));applyShell()}
 function setLang(l){
