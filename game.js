@@ -269,7 +269,7 @@
 
 'use strict';
 const DEV=false;
-const VERSION='1.0.3';
+const VERSION='1.0.4';
 const $=id=>document.getElementById(id);
 /* ---------- langue ---------- */
 const LANG_KEY='oxyblox-lang';
@@ -1484,6 +1484,7 @@ function setLang(l){
 
 /* ---------- notes de mise à jour (la plus récente en premier) ---------- */
 const PATCH_NOTES=[
+ {v:'1.0.4',d:['26 octobre 2026','26 October 2026'],fr:['Options : crédits du jeu ; « Bruitages » au lieu de « Effets sonores », comme dans les autres jeux du studio.'],en:['Options: game credits.']},
  {v:'1.0.3',d:['19 octobre 2026','19 October 2026'],fr:['Options : sauvegarde à exporter ou importer, signaler un bug, soutenir le studio, retour à l’écran titre.'],en:['Options: save export and import, bug report, support the studio, back to the title screen.']},
  {v:'1.0.2',d:['19 octobre 2026','19 October 2026'],fr:['Le bouton retour du téléphone ne quitte plus le jeu d’un coup : il ferme les fenêtres, met le vol en pause, revient à la planète, puis propose de revenir à l’écran titre. Depuis l’écran titre, il propose d’aller au hub Keismey Studio.'],en:['The phone’s back button no longer leaves the game at once: it closes windows, pauses the flight, returns to the planet, then offers to go back to the title screen. From the title screen, it offers to go to the Keismey Studio hub.']},
  {v:'1.0.1',d:['16 octobre 2026','16 October 2026'],fr:['Nouveau : ces notes de mise à jour, dans les Réglages. Elles s’affichent une fois après chaque mise à jour.'],en:['New: these patch notes, in Settings. They show once after each update.']},
@@ -1609,7 +1610,7 @@ Object.assign(SHEETS,{
   <button class="btn ghost wide" data-act="settings">${tl('Retour aux options','Back to options')}</button>`},
  settings:()=>`<div class="sh-h"><div class="big" style="background:#ffffff08">${ic('gear')}</div><div><h3>${tl('Options','Options')}</h3><p>Oxyblox · v${VERSION}${DEV?' (prototype)':''} · Keismey Studio</p></div></div>
   <div class="volr"><span>${tl('Langue','Language')}</span><div class="seg2" style="grid-column:span 2"><button class="${LANG==='fr'?'on':''}" data-act="lang" data-arg="fr">Français</button><button class="${LANG==='en'?'on':''}" data-act="lang" data-arg="en">English</button></div></div>
-  ${[['mus',tl('Musique','Music')],['sfx',tl('Effets sonores','Sound effects')]].map(([k,l])=>`<label class="volr"><span>${l}</span><input type="range" id="vol-${k}" min="0" max="100" step="5" value="${Math.round(S.vol[k]*100)}" data-vol="${k}"><output>${Math.round(S.vol[k]*100)}${PCT()}</output></label>`).join('')}
+  ${[['mus',tl('Musique','Music')],['sfx',tl('Bruitages','Sound effects')]].map(([k,l])=>`<label class="volr"><span>${l}</span><input type="range" id="vol-${k}" min="0" max="100" step="5" value="${Math.round(S.vol[k]*100)}" data-vol="${k}"><output>${Math.round(S.vol[k]*100)}${PCT()}</output></label>`).join('')}
   ${DEV?`<button class="tog" data-act="togTest"><span>${tl('Mode test','Test mode')}<small>${tl('Production et chantiers ×20, Zone infinie ouverte, bouton pour finir les chantiers.','Output and construction ×20, Endless Zone open, button to finish constructions.')}</small></span><span class="sw ${S.test?'on':''}"></span></button>
   ${S.test?`<button class="btn ghost wide" data-act="testRes">${tl('+5 000 métal et cristal, +100 xéno','+5,000 metal and crystal, +100 xeno')}</button><button class="btn ghost wide" data-act="testTerra">${tl('Planète viable et habitats pleins','Viable planet and full habitats')}</button><button class="btn ghost wide" data-act="testBp">${tl('Débloquer tous les schémas et secteurs','Unlock all schematics and sectors')}</button>`:''}`:''}
   <button class="btn ghost wide" data-act="notes">${tl('Notes de mise à jour','Patch notes')}</button>
@@ -1618,7 +1619,8 @@ Object.assign(SHEETS,{
   <button class="btn ghost wide" data-act="support">${tl('Soutenir le studio','Support the studio')}</button>
   <button class="btn ghost wide" data-act="toTitle">${tl('Écran titre','Title screen')}</button>
   <div class="sep"></div>
-  <button class="btn red wide" data-act="reset">${SHEET&&SHEET.confirm==='reset'?tl('Confirmer : tout effacer','Confirm: erase everything'):tl('Recommencer une partie','Start a new game')}</button>`
+  <button class="btn red wide" data-act="reset">${SHEET&&SHEET.confirm==='reset'?tl('Confirmer : tout effacer','Confirm: erase everything'):tl('Recommencer une partie','Start a new game')}</button>
+  <p style="text-align:center;font-size:12px;opacity:.6;margin:12px 0 0">${tl('Conception et direction : Keismey · Développé avec l’aide d’outils IA','Design and direction: Keismey · Developed with the help of AI tools')}</p>`
 });
 
 /* ---------- actions ---------- */
