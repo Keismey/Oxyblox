@@ -30,4 +30,4 @@ function onBack(){
  if(view!=='planet'){setView('planet');return}
  backAsk('Oxyblox',tl('Retour à l’écran titre ?','Back to the title screen?'),tl('Ta partie est enregistrée.','Your game is saved.'),tl('Écran titre','Title screen'),titleAgain);
 }
-KSBack.init({back:onBack,lang:()=>LANG==='en'?'en':'fr'});
+KSBack.init({back:onBack,lang:()=>LANG==='en'?'en':'fr',title:()=>{const s=$('spl');return !!s&&!s.classList.contains('out')&&!s.querySelector('.lg')&&$('modal').hidden}});
