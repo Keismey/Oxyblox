@@ -15,28 +15,29 @@ let lastRes={};
 function bumpRes(keys){if(SIM)return;keys.forEach(r=>{const e=$('r-'+r);if(e){e.classList.remove('bump');void e.offsetWidth;e.classList.add('bump')}});renderRes()}
 function renderRes(){for(const r in RES){const v=Math.floor((S.res[r]||0)+1e-9);if(lastRes[r]!==v){lastRes[r]=v;const el=$('r-'+r),full=BAL.cap[r]!=null&&v>=BAL.cap[r];el.classList.toggle('full',full);el.title=r==='p'?`${tl('Colons','Colonists')}${tl(' :',':')} ${v} / ${popCap()}`:`${RES[r].n}${tl(' :',':')} ${fmt(v)} / ${fmt(BAL.cap[r])} max`;el.innerHTML=ic(RES[r].i)+`<span>${fmtS(v)}</span>`}}}
 let SHEET=null;
-function openSheet(kind,arg){const was=!!SHEET;if(!was)sheetBack=document.activeElement;SHEET={kind,arg};sheetHTML='';renderSheet();$('sheet').classList.add('open');$('scrim').classList.add('on');lockFocus();if(!was&&$('modal').hidden)$('sheet').focus({preventScroll:true})}
+function openSheet(kind,arg){const was=!!SHEET;if(!was)sheetBack=modalOpen?modalBack:fKey(document.activeElement);SHEET={kind,arg};sheetHTML='';renderSheet();$('sheet').classList.add('open');$('scrim').classList.add('on');lockFocus();if(!was&&$('modal').hidden)$('sheet').focus({preventScroll:true})}
 function closeSheet(){const was=!!SHEET;SHEET=null;$('sheet').classList.remove('open');$('scrim').classList.remove('on');if(!was)return;lockFocus();if($('modal').hidden)focusBackTo(sheetBack);sheetBack=null}
 /* clavier : seule la couche du dessus (écran titre, fenêtre, feuille) reçoit le focus ; il revient où il était à la fermeture */
 let sheetBack=null,modalBack=null,modalOpen=false;
 function lockFocus(){
- const sp=$('spl'),spl=!!sp&&!sp.classList.contains('out'),m=!$('modal').hidden,sh=!!SHEET;
- ['top','obj'].forEach(id=>$(id).inert=spl||m||sh);
- document.querySelector('main').inert=document.querySelector('nav').inert=spl||m||sh;
- $('sheet').inert=spl||m||!sh;
- if(sp)sp.inert=m;
- const h=$('sheetc').querySelector('h3');if(h)$('sheet').setAttribute('aria-label',h.textContent);
+ const sp=$('spl'),m=!$('modal').hidden,sh=!!SHEET,top=m?$('modal'):sp&&!sp.classList.contains('out')?sp:sh?$('sheet'):null;
+ for(const el of $('app').children)el.inert=top?el!==top&&!(el.id==='upd'&&top.id==='sheet'):el.id==='sheet'&&!sh;
 }
-function focusBackTo(el){if(el&&el.focus&&document.contains(el)&&!el.closest('[inert],[hidden]'))el.focus({preventScroll:true})}
+// on retient l'élément et son data-act/data-arg : s'il a été redessiné entre-temps, on retrouve son remplaçant
+function fKey(el){return el&&el!==document.body&&el.dataset?{el,act:el.dataset.act,arg:el.dataset.arg}:null}
+const focusable=el=>el&&el.focus&&document.contains(el)&&!el.disabled&&!el.closest('[inert],[hidden]');
+function focusBackTo(k){if(!k)return;let el=k.el;if(!focusable(el)&&k.act)el=[...document.querySelectorAll('[data-act]')].find(x=>x.dataset.act===k.act&&x.dataset.arg===k.arg&&focusable(x));if(focusable(el))el.focus({preventScroll:true})}
 let sheetHold=0,sheetHTML='';
 $('sheet').addEventListener('pointerdown',()=>{sheetHold=performance.now()},true);
-function renderSheet(auto){if(!SHEET||SIM)return;const f=SHEETS[SHEET.kind];if(!f)return;const h=f(SHEET.arg);if(h===sheetHTML&&$('sheetc').innerHTML)return;if(auto&&performance.now()-sheetHold<800)return;sheetHTML=h;const sc=$('sheetc').scrollTop,FQ='button,input,summary,a[href]',a=document.activeElement,fi=a&&$('sheetc').contains(a)?[...$('sheetc').querySelectorAll(FQ)].indexOf(a):-1;$('sheetc').innerHTML=h;$('sheetc').scrollTop=sc;if(fi>=0){const l=$('sheetc').querySelectorAll(FQ);(l[fi]||$('sheet')).focus({preventScroll:true})}}
+function renderSheet(auto){if(!SHEET||SIM)return;const f=SHEETS[SHEET.kind];if(!f)return;const h=f(SHEET.arg);if(h===sheetHTML&&$('sheetc').innerHTML)return;if(auto&&performance.now()-sheetHold<800)return;const a=document.activeElement,inS=!!a&&$('sheetc').contains(a);if(auto&&inS)return;sheetHTML=h;const sc=$('sheetc').scrollTop,k=inS?fKey(a):null;$('sheetc').innerHTML=h;$('sheetc').scrollTop=sc;
+ const hd=$('sheetc').querySelector('h3,h2');if(hd)$('sheet').setAttribute('aria-label',hd.textContent);else $('sheet').removeAttribute('aria-label');
+ if(inS){focusBackTo(k);if(!$('sheet').contains(document.activeElement))$('sheet').focus({preventScroll:true})}}
 let modalQ=[];
 function modal(o){if(SIM)return;modalQ.push(o);if(modalQ.length===1)showModal()}
 function showModal(){const o=modalQ[0];if(!o){$('modal').hidden=true;if(modalOpen){modalOpen=false;lockFocus();focusBackTo(modalBack);modalBack=null;if(SHEET&&!$('sheet').contains(document.activeElement))$('sheet').focus({preventScroll:true})}return}
- if(!modalOpen){modalOpen=true;modalBack=document.activeElement}
+ if(!modalOpen){modalOpen=true;modalBack=fKey(document.activeElement)}
  $('mbox').innerHTML=`${o.eyebrow?`<div class="eyebrow">${o.eyebrow}</div>`:''}<h2 id="mttl">${o.title}</h2>${o.text?`<p>${o.text}</p>`:''}${o.html||''}<div class="ch">${(o.choices||[{l:'Continuer'}]).map((c,k)=>`<button class="btn ${c.cls||''}" data-mc="${k}" ${c.dis?'disabled':''}>${c.l}</button>`).join('')}</div>`;
- $('modal').hidden=false;lockFocus();const fb=$('mbox').querySelector('[data-mc]:not([disabled])');if(fb)fb.focus({preventScroll:true});else $('mbox').focus({preventScroll:true})}
+ $('modal').hidden=false;lockFocus();const fb=$('mbox').querySelector('[data-mc].ghost:not([disabled])')||$('mbox').querySelector('[data-mc]:not([disabled])');if(fb)fb.focus({preventScroll:true});else $('mbox').focus({preventScroll:true})}
 $('mbox').addEventListener('click',e=>{const b=e.target.closest('[data-mc]');if(!b||b.disabled)return;const o=modalQ[0];const c=(o.choices||[{}])[+b.dataset.mc];SFX.click();modalQ.shift();$('modal').hidden=true;if(c&&c.f)c.f();showModal()});
 function flash(){const f=$('flash');f.classList.remove('go');void f.offsetWidth;f.classList.add('go')}
 
