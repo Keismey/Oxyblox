@@ -4,7 +4,7 @@
   python3 src/build.py                    -> le site (index.html, game.js, style.css, sw.js) à la racine du dépôt
   python3 src/build.py --artifact F.html  -> une seule page autonome (images et musiques intégrées, mode test visible)
 """
-import base64, hashlib, os, re, sys
+import base64, functools, hashlib, os, re, sys
 
 SRC = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(SRC)
@@ -20,8 +20,17 @@ def data_uri(name):
     mime = 'audio/mpeg' if name.endswith('.mp3') else 'image/webp'
     return 'data:%s;base64,%s' % (mime, base64.b64encode(open(os.path.join(ROOT, 'a', name), 'rb').read()).decode())
 
+@functools.lru_cache(None)
+def asset_url(d, name):
+    # musiques : empreinte du fichier dans l'adresse, qui ne change que si la musique change ;
+    # le service worker peut alors reprendre la copie de la version précédente
+    if not name.endswith('.mp3'):
+        return '%s/%s' % (d, name)
+    with open(os.path.join(ROOT, d, name), 'rb') as fh:
+        return '%s/%s?v=%s' % (d, name, hashlib.sha1(fh.read()).hexdigest()[:8])
+
 def assemble(inline):
-    ref = data_uri if inline else (lambda n: 'a/' + n)
+    ref = data_uri if inline else (lambda n: asset_url('a', n))
     js = ''.join(read(os.path.join(SRC, f)) + '\n' for f in JS_FILES)
     for key, names in IMG.items():
         js = js.replace('/*%s*/[]' % key, '[' + ','.join("'%s'" % ref(n) for n in names) + ']')
@@ -93,7 +102,7 @@ def site():
     files = ['./', './index.html', './game.js?v=' + h, './style.css?v=' + h, './manifest.webmanifest']
     for d in ['icons', 'fonts', 'a']:
         for f in sorted(os.listdir(os.path.join(ROOT, d))):
-            if not f.endswith('.txt'): files.append('./%s/%s' % (d, f))
+            if not f.endswith('.txt'): files.append('./' + asset_url(d, f))
     sw = read(os.path.join(SRC, 'sw.template.js')).replace('__VERSION__', 'oxyblox-%s-%s' % (ver, h)).replace('__FILES__', ',\n  '.join("'%s'" % f for f in files))
     open(os.path.join(ROOT, 'sw.js'), 'w', encoding='utf-8').write(sw)
     print('site', ver, h, 'game.js', len(js), 'style.css', len(css), 'fichiers en cache', len(files))

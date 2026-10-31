@@ -1,11 +1,11 @@
 // Oxyblox — service worker (généré par src/build.py, ne pas modifier sw.js à la main).
 // Met tout le jeu en cache pour jouer hors ligne ; une nouvelle version propose « Mettre à jour ».
-const VERSION = 'oxyblox-1.0.6-28e0a7e1';
+const VERSION = 'oxyblox-1.0.7-f67d300b';
 const CORE = [
   './',
   './index.html',
-  './game.js?v=28e0a7e1',
-  './style.css?v=28e0a7e1',
+  './game.js?v=f67d300b',
+  './style.css?v=f67d300b',
   './manifest.webmanifest',
   './icons/apple-touch-icon.png',
   './icons/favicon.png',
@@ -34,14 +34,20 @@ const CORE = [
   './a/map2.webp',
   './a/map3.webp',
   './a/map4.webp',
-  './a/mus_boss.mp3',
-  './a/mus_calm.mp3',
-  './a/mus_mission.mp3',
+  './a/mus_boss.mp3?v=59e878ca',
+  './a/mus_calm.mp3?v=244fe6d5',
+  './a/mus_mission.mp3?v=eb4d4738',
   './a/title.webp'
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)));
+  // Les musiques (6 Mo, adresse avec l'empreinte du fichier ?v=) sont reprises de la version précédente
+  // quand elles n'ont pas changé : une mise à jour du jeu ne les retélécharge plus.
+  const mp3 = f => new URL(f, location).pathname.endsWith('.mp3');
+  e.waitUntil(caches.open(VERSION).then(c => Promise.all([
+    c.addAll(CORE.filter(f => !mp3(f))),
+    ...CORE.filter(mp3).map(f => caches.match(f).then(hit => hit && hit.status === 200 ? c.put(f, hit) : c.add(f)))
+  ])));
 });
 
 self.addEventListener('activate', e => {
@@ -67,7 +73,7 @@ self.addEventListener('fetch', e => {
   // les musiques sont lues par plages (Range) : on découpe la réponse en cache (206) pour Safari comme Chrome
   const range = req.headers.get('range');
   if (range && url.pathname.endsWith('.mp3')) {
-    e.respondWith(caches.match(req, { ignoreSearch: true }).then(async hit => {
+    e.respondWith(caches.match(req).then(hit => hit || caches.match(req, { ignoreSearch: true })).then(async hit => {
       if (!hit) return fetch(req);
       const buf = await hit.arrayBuffer(), m = /bytes=(\d*)-(\d*)/.exec(range) || [];
       const start = m[1] ? +m[1] : 0, end = m[2] ? Math.min(+m[2], buf.byteLength - 1) : buf.byteLength - 1;
