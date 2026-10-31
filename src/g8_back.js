@@ -13,7 +13,8 @@ function titleAgain(){
  const tt=spl.querySelector('.tt');if(tt&&TITLE_BG)tt.style.background=`linear-gradient(#05070dcc,#05070d00 32%,#05070d00 70%,#05070dcc),url(${TITLE_BG}) center/cover`;
  $('app').appendChild(spl);
  let out=false;
- spl.addEventListener('pointerdown',e=>{e.stopPropagation();if(out)return;out=true;spl.classList.add('out');setTimeout(()=>spl.remove(),650)});
+ spl.addEventListener('pointerdown',e=>{e.stopPropagation();if(out)return;out=true;spl.classList.add('out');lockFocus();setTimeout(()=>spl.remove(),650)});
+ lockFocus();
 }
 function onBack(){
  if(!$('modal').hidden){const bs=[...$('mbox').querySelectorAll('[data-mc]')];const b=bs.find(x=>x.classList.contains('ghost'))||(bs.length===1?bs[0]:bs[bs.length-1]);if(b&&!b.disabled)b.click();return}
@@ -30,4 +31,10 @@ function onBack(){
  if(view!=='planet'){setView('planet');return}
  backAsk('Oxyblox',tl('Retour à l’écran titre ?','Back to the title screen?'),tl('Ta partie est enregistrée.','Your game is saved.'),tl('Écran titre','Title screen'),titleAgain);
 }
+// écran titre au clavier : Entrée ou Espace fait comme un toucher (sauf sur le bouton Hub).
+// Déclenché au relâchement, pour que la touche ne valide pas aussi la première fenêtre qui reçoit le focus.
+let splKey=null;
+const splOn=e=>{const s=$('spl');return s&&!s.classList.contains('out')&&$('modal').hidden&&(e.key==='Enter'||e.key===' ')&&!(e.target&&e.target.closest&&e.target.closest('button,a,input'))?s:null};
+document.addEventListener('keydown',e=>{if(!splOn(e))return;e.preventDefault();if(!e.repeat)splKey=e.key});
+document.addEventListener('keyup',e=>{const s=splOn(e);if(!s||splKey!==e.key)return;splKey=null;e.preventDefault();s.dispatchEvent(new Event('pointerdown'))});
 KSBack.init({back:onBack,lang:()=>LANG==='en'?'en':'fr',title:()=>{const s=$('spl');return !!s&&!s.classList.contains('out')&&!s.querySelector('.lg')&&$('modal').hidden}});

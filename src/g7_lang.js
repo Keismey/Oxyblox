@@ -57,7 +57,7 @@ function applyShell(){
  document.documentElement.lang=LANG;
  const set=(sel,t)=>{const e=document.querySelector(sel);if(e)e.textContent=t};
  set('#spltag',tl('Construis. Tire. Respire.','Build. Shoot. Breathe.'));
- set('#splgo',matchMedia('(hover:hover) and (pointer:fine)').matches?tl('Clique pour commencer','Click to start'):tl('Touche pour commencer','Tap to start'));
+ set('#splgo',matchMedia('(hover:hover) and (pointer:fine)').matches?tl('Clique ou appuie sur Entrée','Click or press Enter'):tl('Touche pour commencer','Tap to start'));
  set('#rot span',tl('Tourne ton téléphone en mode portrait','Turn your phone to portrait'));
  set('#v-planet .vt>span',tl('Planète tellurique · orbite basse','Rocky planet · low orbit'));
  set('#colAll',tl('Tout récupérer','Collect all'));

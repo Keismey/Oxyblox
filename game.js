@@ -1256,6 +1256,14 @@ function mWhy(id,L,i){
 
 /* ---------- vue hangar ---------- */
 let MOVE=null;
+// nom lisible d'une case pour le lecteur d'écran (le dessin seul ne dit rien)
+function cellLbl(c,i){
+ if(c.s==='void')return tl(`verrouillée, chantier ${TIER[i]}`,`locked, yard ${TIER[i]}`);
+ if(c.s==='dmg')return tl('fissurée, à réparer','cracked, needs repair');
+ const m=c.m;if(m)return MD[m.id].n+(MD[m.id].fixed?'':tl(` niveau ${m.lvl}`,` level ${m.lvl}`));
+ if(c.g&&MD[c.g])return tl(`vide, prévu : ${MD[c.g].n}`,`empty, planned: ${MD[c.g].n}`);
+ return tl('vide','empty');
+}
 function renderShip(){
  const el=$('v-ship');const W=el.clientWidth||360;const ship=curShip(),sand=sandbox(),I=shipInfo(ship);
  const cs=Math.floor(Math.min(60,(W-24)/GC)),gw=cs*GC,gh=cs*GR;
@@ -1274,7 +1282,7 @@ function renderShip(){
     inner+=`${dir}<div class="hi" style="color:${col}">${ic(m.id)}<span>${MD[m.id].s}</span>${MD[m.id].fixed?'':`<span class="pips">${Array.from({length:MD[m.id].max},(_,k)=>`<i class="${k<m.lvl?'on':''}"></i>`).join('')}</span>`}</div>`}
    else if(c.g&&MD[c.g]){const gc=MD[c.g].col;cls+=' gh';inner=`<svg viewBox="-.04 -.04 1.08 1.08">${shpSvg(c.sh,c.rot,gc+'10',gc+'aa',1.5)}</svg><div class="hi" style="color:${gc}">${ic(c.g)}<span>${tl('Prévu','Planned')}</span></div>`}
    else{const near=touchesModule(ship,i);if(!near)cls+=' far';inner+=`<div class="hi" style="color:#56627c"><b style="font:700 16px var(--f-disp)">+</b></div>`;if(near&&objMod&&!hinted&&!I.count[objMod]){cls+=' hint';hinted=true}}}
-  return`<button class="${cls}" ${st} data-act="cell" data-arg="${i}" aria-label="${tl('Case','Cell')} ${i+1}">${inner}</button>`}).join('');
+  return`<button class="${cls}" ${st} data-act="cell" data-arg="${i}" aria-label="${tl('Case','Cell')} ${i+1}${tl(' : ',': ')}${cellLbl(c,i)}">${inner}</button>`}).join('');
  const segs=Math.max(1,I.pwr);
  el.innerHTML=`<div class="shipwrap">
   ${arenaOpen()?`<div class="seg2"><button class="${!sand?'on':''}" data-act="editMode" data-arg="camp">${tl('Vaisseau de campagne','Campaign ship')}</button><button class="${sand?'on':''}" data-act="editMode" data-arg="arena">${tl('Vaisseau d’arène','Arena ship')}</button></div>`:''}
@@ -1872,7 +1880,7 @@ function applyShell(){
  document.documentElement.lang=LANG;
  const set=(sel,t)=>{const e=document.querySelector(sel);if(e)e.textContent=t};
  set('#spltag',tl('Construis. Tire. Respire.','Build. Shoot. Breathe.'));
- set('#splgo',matchMedia('(hover:hover) and (pointer:fine)').matches?tl('Clique pour commencer','Click to start'):tl('Touche pour commencer','Tap to start'));
+ set('#splgo',matchMedia('(hover:hover) and (pointer:fine)').matches?tl('Clique ou appuie sur Entrée','Click or press Enter'):tl('Touche pour commencer','Tap to start'));
  set('#rot span',tl('Tourne ton téléphone en mode portrait','Turn your phone to portrait'));
  set('#v-planet .vt>span',tl('Planète tellurique · orbite basse','Rocky planet · low orbit'));
  set('#colAll',tl('Tout récupérer','Collect all'));
@@ -1887,7 +1895,7 @@ function setLang(l){
 
 /* ---------- notes de mise à jour (la plus récente en premier) ---------- */
 const PATCH_NOTES=[
- {v:'1.0.6',d:['31 octobre 2026','31 October 2026'],fr:['Boutons plus faciles à toucher au pouce : Options, Fermer, Renommer, Pause, Plans, langue et volumes.'],en:['Buttons easier to tap with a thumb: Options, Close, Rename, Pause, Blueprints, language and volume.']},
+ {v:'1.0.6',d:['31 octobre 2026','31 October 2026'],fr:['Boutons plus faciles à toucher au pouce : Options, Fermer, Renommer, Pause, Plans, langue et volumes.','Clavier : Entrée lance la partie depuis l’écran titre, et le focus reste dans la fenêtre ou le panneau ouvert.','Lecteur d’écran : chaque case du hangar dit ce qu’elle contient.'],en:['Buttons easier to tap with a thumb: Options, Close, Rename, Pause, Blueprints, language and volume.','Keyboard: Enter starts the game from the title screen, and focus stays inside the open window or panel.','Screen reader: each hangar cell says what it holds.']},
  {v:'1.0.5',d:['29 octobre 2026','29 October 2026'],fr:['Options : bouton « Retour au hub », et le même ordre que dans les autres jeux du studio (son, langue, sauvegarde, puis le studio).'],en:['Options: a “Back to the hub” button, in the same order as the studio’s other games (sound, language, save, then the studio).']},
  {v:'1.0.4',d:['26 octobre 2026','26 October 2026'],fr:['Options : crédits du jeu ; « Bruitages » au lieu de « Effets sonores », comme dans les autres jeux du studio.'],en:['Options: game credits.']},
  {v:'1.0.3',d:['19 octobre 2026','19 October 2026'],fr:['Options : sauvegarde à exporter ou importer, signaler un bug, soutenir le studio, retour à l’écran titre.'],en:['Options: save export and import, bug report, support the studio, back to the title screen.']},
@@ -1902,16 +1910,29 @@ let lastRes={};
 function bumpRes(keys){if(SIM)return;keys.forEach(r=>{const e=$('r-'+r);if(e){e.classList.remove('bump');void e.offsetWidth;e.classList.add('bump')}});renderRes()}
 function renderRes(){for(const r in RES){const v=Math.floor((S.res[r]||0)+1e-9);if(lastRes[r]!==v){lastRes[r]=v;const el=$('r-'+r),full=BAL.cap[r]!=null&&v>=BAL.cap[r];el.classList.toggle('full',full);el.title=r==='p'?`${tl('Colons','Colonists')}${tl(' :',':')} ${v} / ${popCap()}`:`${RES[r].n}${tl(' :',':')} ${fmt(v)} / ${fmt(BAL.cap[r])} max`;el.innerHTML=ic(RES[r].i)+`<span>${fmtS(v)}</span>`}}}
 let SHEET=null;
-function openSheet(kind,arg){SHEET={kind,arg};sheetHTML='';renderSheet();$('sheet').classList.add('open');$('scrim').classList.add('on')}
-function closeSheet(){SHEET=null;$('sheet').classList.remove('open');$('scrim').classList.remove('on')}
+function openSheet(kind,arg){const was=!!SHEET;if(!was)sheetBack=modalOpen?modalBack:fKey(document.activeElement);SHEET={kind,arg};sheetHTML='';renderSheet();$('sheet').classList.add('open');$('scrim').classList.add('on');lockFocus();if(!was&&$('modal').hidden)$('sheet').focus({preventScroll:true})}
+function closeSheet(){const was=!!SHEET;SHEET=null;$('sheet').classList.remove('open');$('scrim').classList.remove('on');if(!was)return;lockFocus();if($('modal').hidden)focusBackTo(sheetBack);sheetBack=null}
+/* clavier : seule la couche du dessus (écran titre, fenêtre, feuille) reçoit le focus ; il revient où il était à la fermeture */
+let sheetBack=null,modalBack=null,modalOpen=false;
+function lockFocus(){
+ const sp=$('spl'),m=!$('modal').hidden,sh=!!SHEET,top=m?$('modal'):sp&&!sp.classList.contains('out')?sp:sh?$('sheet'):null;
+ for(const el of $('app').children)el.inert=top?el!==top&&!(el.id==='upd'&&top.id==='sheet'):el.id==='sheet'&&!sh;
+}
+// on retient l'élément et son data-act/data-arg : s'il a été redessiné entre-temps, on retrouve son remplaçant
+function fKey(el){return el&&el!==document.body&&el.dataset?{el,act:el.dataset.act,arg:el.dataset.arg}:null}
+const focusable=el=>el&&el.focus&&document.contains(el)&&!el.disabled&&!el.closest('[inert],[hidden]');
+function focusBackTo(k){if(!k)return;let el=k.el;if(!focusable(el)&&k.act)el=[...document.querySelectorAll('[data-act]')].find(x=>x.dataset.act===k.act&&x.dataset.arg===k.arg&&focusable(x));if(focusable(el))el.focus({preventScroll:true})}
 let sheetHold=0,sheetHTML='';
 $('sheet').addEventListener('pointerdown',()=>{sheetHold=performance.now()},true);
-function renderSheet(auto){if(!SHEET||SIM)return;const f=SHEETS[SHEET.kind];if(!f)return;const h=f(SHEET.arg);if(h===sheetHTML&&$('sheetc').innerHTML)return;if(auto&&performance.now()-sheetHold<800)return;sheetHTML=h;const sc=$('sheetc').scrollTop;$('sheetc').innerHTML=h;$('sheetc').scrollTop=sc}
+function renderSheet(auto){if(!SHEET||SIM)return;const f=SHEETS[SHEET.kind];if(!f)return;const h=f(SHEET.arg);if(h===sheetHTML&&$('sheetc').innerHTML)return;if(auto&&performance.now()-sheetHold<800)return;const a=document.activeElement,inS=!!a&&$('sheetc').contains(a);if(auto&&inS)return;sheetHTML=h;const sc=$('sheetc').scrollTop,k=inS?fKey(a):null;$('sheetc').innerHTML=h;$('sheetc').scrollTop=sc;
+ const hd=$('sheetc').querySelector('h3,h2');if(hd)$('sheet').setAttribute('aria-label',hd.textContent);else $('sheet').removeAttribute('aria-label');
+ if(inS){focusBackTo(k);if(!$('sheet').contains(document.activeElement))$('sheet').focus({preventScroll:true})}}
 let modalQ=[];
 function modal(o){if(SIM)return;modalQ.push(o);if(modalQ.length===1)showModal()}
-function showModal(){const o=modalQ[0];if(!o){$('modal').hidden=true;return}
- $('mbox').innerHTML=`${o.eyebrow?`<div class="eyebrow">${o.eyebrow}</div>`:''}<h2>${o.title}</h2>${o.text?`<p>${o.text}</p>`:''}${o.html||''}<div class="ch">${(o.choices||[{l:'Continuer'}]).map((c,k)=>`<button class="btn ${c.cls||''}" data-mc="${k}" ${c.dis?'disabled':''}>${c.l}</button>`).join('')}</div>`;
- $('modal').hidden=false}
+function showModal(){const o=modalQ[0];if(!o){$('modal').hidden=true;if(modalOpen){modalOpen=false;lockFocus();focusBackTo(modalBack);modalBack=null;if(SHEET&&!$('sheet').contains(document.activeElement))$('sheet').focus({preventScroll:true})}return}
+ if(!modalOpen){modalOpen=true;modalBack=fKey(document.activeElement)}
+ $('mbox').innerHTML=`${o.eyebrow?`<div class="eyebrow">${o.eyebrow}</div>`:''}<h2 id="mttl">${o.title}</h2>${o.text?`<p>${o.text}</p>`:''}${o.html||''}<div class="ch">${(o.choices||[{l:'Continuer'}]).map((c,k)=>`<button class="btn ${c.cls||''}" data-mc="${k}" ${c.dis?'disabled':''}>${c.l}</button>`).join('')}</div>`;
+ $('modal').hidden=false;lockFocus();const fb=$('mbox').querySelector('[data-mc].ghost:not([disabled])')||$('mbox').querySelector('[data-mc]:not([disabled])');if(fb)fb.focus({preventScroll:true});else $('mbox').focus({preventScroll:true})}
 $('mbox').addEventListener('click',e=>{const b=e.target.closest('[data-mc]');if(!b||b.disabled)return;const o=modalQ[0];const c=(o.choices||[{}])[+b.dataset.mc];SFX.click();modalQ.shift();$('modal').hidden=true;if(c&&c.f)c.f();showModal()});
 function flash(){const f=$('flash');f.classList.remove('go');void f.offsetWidth;f.classList.add('go')}
 
@@ -2221,7 +2242,8 @@ function boot(d){
  const spl=$('spl'),lg=spl.querySelector('.lg');let st=0;
  const toT=()=>{if(st)return;st=1;lg.style.opacity=0;setTimeout(()=>lg.remove(),700)};
  setTimeout(toT,2200);
- spl.addEventListener('pointerdown',e=>{e.stopPropagation();ac();if(!st){toT();return}if(st===2)return;st=2;spl.classList.add('out');setTimeout(()=>spl.remove(),650);if(fresh){S.intro=1;S.pnV=VERSION;intro()}else if(S.pnV!==VERSION)setTimeout(()=>{openSheet('notes');save()},700)});
+ spl.addEventListener('pointerdown',e=>{e.stopPropagation();ac();if(!st){toT();return}if(st===2)return;st=2;spl.classList.add('out');lockFocus();setTimeout(()=>spl.remove(),650);if(fresh){S.intro=1;S.pnV=VERSION;intro()}else if(S.pnV!==VERSION)setTimeout(()=>{openSheet('notes');save()},700)});
+ lockFocus();
  requestAnimationFrame(loop);
  swInit();
 }
@@ -2247,7 +2269,8 @@ function titleAgain(){
  const tt=spl.querySelector('.tt');if(tt&&TITLE_BG)tt.style.background=`linear-gradient(#05070dcc,#05070d00 32%,#05070d00 70%,#05070dcc),url(${TITLE_BG}) center/cover`;
  $('app').appendChild(spl);
  let out=false;
- spl.addEventListener('pointerdown',e=>{e.stopPropagation();if(out)return;out=true;spl.classList.add('out');setTimeout(()=>spl.remove(),650)});
+ spl.addEventListener('pointerdown',e=>{e.stopPropagation();if(out)return;out=true;spl.classList.add('out');lockFocus();setTimeout(()=>spl.remove(),650)});
+ lockFocus();
 }
 function onBack(){
  if(!$('modal').hidden){const bs=[...$('mbox').querySelectorAll('[data-mc]')];const b=bs.find(x=>x.classList.contains('ghost'))||(bs.length===1?bs[0]:bs[bs.length-1]);if(b&&!b.disabled)b.click();return}
@@ -2264,5 +2287,11 @@ function onBack(){
  if(view!=='planet'){setView('planet');return}
  backAsk('Oxyblox',tl('Retour à l’écran titre ?','Back to the title screen?'),tl('Ta partie est enregistrée.','Your game is saved.'),tl('Écran titre','Title screen'),titleAgain);
 }
+// écran titre au clavier : Entrée ou Espace fait comme un toucher (sauf sur le bouton Hub).
+// Déclenché au relâchement, pour que la touche ne valide pas aussi la première fenêtre qui reçoit le focus.
+let splKey=null;
+const splOn=e=>{const s=$('spl');return s&&!s.classList.contains('out')&&$('modal').hidden&&(e.key==='Enter'||e.key===' ')&&!(e.target&&e.target.closest&&e.target.closest('button,a,input'))?s:null};
+document.addEventListener('keydown',e=>{if(!splOn(e))return;e.preventDefault();if(!e.repeat)splKey=e.key});
+document.addEventListener('keyup',e=>{const s=splOn(e);if(!s||splKey!==e.key)return;splKey=null;e.preventDefault();s.dispatchEvent(new Event('pointerdown'))});
 KSBack.init({back:onBack,lang:()=>LANG==='en'?'en':'fr',title:()=>{const s=$('spl');return !!s&&!s.classList.contains('out')&&!s.querySelector('.lg')&&$('modal').hidden}});
 

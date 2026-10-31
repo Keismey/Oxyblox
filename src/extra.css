@@ -125,3 +125,5 @@ ul.tips{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:
 .volr input{height:44px;margin:0}
 #sheetc details>summary{padding:12px 0}
 #upd .x{width:44px;height:44px;margin:-7px -6px -7px 0}
+/* 1.0.6 : focus clavier posé sur la fenêtre ou la feuille elle-même, sans cadre */
+#sheet:focus,#mbox:focus{outline:none}
