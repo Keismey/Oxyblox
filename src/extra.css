@@ -112,3 +112,18 @@ ul.tips{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:
 .recs span{font:700 10.5px var(--f-disp);letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
 .recs b{font:800 20px var(--f-disp);color:var(--amber2)}
 .recs small{font:12px var(--f-mono);color:var(--dim)}
+/* 1.0.6 : zones tactiles d'au moins 44 px (pouce) sans changer la hauteur des barres */
+.btn,.btn.sm{min-height:44px}
+.shpb{width:44px}
+#gear{width:44px;height:44px;margin:-6px -6px -6px 0}
+.edb,.res{position:relative}
+.res{overflow:visible}
+.res:after{content:'';position:absolute;left:0;right:0;top:-9px;bottom:-6px}
+.edb:after,.shx:after{content:'';position:absolute;inset:-7px}
+.shx:after{inset:-5px}
+.seg2 button{min-height:44px}
+.volr input{height:44px;margin:0}
+#sheetc details>summary{padding:12px 0}
+#upd .x{width:44px;height:44px;margin:-7px -6px -7px 0}
+/* 1.0.6 : focus clavier posé sur la fenêtre ou la feuille elle-même, sans cadre */
+#sheet:focus,#mbox:focus{outline:none}

@@ -88,6 +88,14 @@ function mWhy(id,L,i){
 
 /* ---------- vue hangar ---------- */
 let MOVE=null;
+// nom lisible d'une case pour le lecteur d'écran (le dessin seul ne dit rien)
+function cellLbl(c,i){
+ if(c.s==='void')return tl(`verrouillée, chantier ${TIER[i]}`,`locked, yard ${TIER[i]}`);
+ if(c.s==='dmg')return tl('fissurée, à réparer','cracked, needs repair');
+ const m=c.m;if(m)return MD[m.id].n+(MD[m.id].fixed?'':tl(` niveau ${m.lvl}`,` level ${m.lvl}`));
+ if(c.g&&MD[c.g])return tl(`vide, prévu : ${MD[c.g].n}`,`empty, planned: ${MD[c.g].n}`);
+ return tl('vide','empty');
+}
 function renderShip(){
  const el=$('v-ship');const W=el.clientWidth||360;const ship=curShip(),sand=sandbox(),I=shipInfo(ship);
  const cs=Math.floor(Math.min(60,(W-24)/GC)),gw=cs*GC,gh=cs*GR;
@@ -106,7 +114,7 @@ function renderShip(){
     inner+=`${dir}<div class="hi" style="color:${col}">${ic(m.id)}<span>${MD[m.id].s}</span>${MD[m.id].fixed?'':`<span class="pips">${Array.from({length:MD[m.id].max},(_,k)=>`<i class="${k<m.lvl?'on':''}"></i>`).join('')}</span>`}</div>`}
    else if(c.g&&MD[c.g]){const gc=MD[c.g].col;cls+=' gh';inner=`<svg viewBox="-.04 -.04 1.08 1.08">${shpSvg(c.sh,c.rot,gc+'10',gc+'aa',1.5)}</svg><div class="hi" style="color:${gc}">${ic(c.g)}<span>${tl('Prévu','Planned')}</span></div>`}
    else{const near=touchesModule(ship,i);if(!near)cls+=' far';inner+=`<div class="hi" style="color:#56627c"><b style="font:700 16px var(--f-disp)">+</b></div>`;if(near&&objMod&&!hinted&&!I.count[objMod]){cls+=' hint';hinted=true}}}
-  return`<button class="${cls}" ${st} data-act="cell" data-arg="${i}" aria-label="${tl('Case','Cell')} ${i+1}">${inner}</button>`}).join('');
+  return`<button class="${cls}" ${st} data-act="cell" data-arg="${i}" aria-label="${tl('Case','Cell')} ${i+1}${tl(' : ',': ')}${cellLbl(c,i)}">${inner}</button>`}).join('');
  const segs=Math.max(1,I.pwr);
  el.innerHTML=`<div class="shipwrap">
   ${arenaOpen()?`<div class="seg2"><button class="${!sand?'on':''}" data-act="editMode" data-arg="camp">${tl('Vaisseau de campagne','Campaign ship')}</button><button class="${sand?'on':''}" data-act="editMode" data-arg="arena">${tl('Vaisseau d’arène','Arena ship')}</button></div>`:''}
