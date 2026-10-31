@@ -1,5 +1,6 @@
 /* ---------- notes de mise à jour (la plus récente en premier) ---------- */
 const PATCH_NOTES=[
+ {v:'1.0.6',d:['31 octobre 2026','31 October 2026'],fr:['Boutons plus faciles à toucher au pouce : Options, Fermer, Renommer, Pause, Plans, langue et volumes.'],en:['Buttons easier to tap with a thumb: Options, Close, Rename, Pause, Blueprints, language and volume.']},
  {v:'1.0.5',d:['29 octobre 2026','29 October 2026'],fr:['Options : bouton « Retour au hub », et le même ordre que dans les autres jeux du studio (son, langue, sauvegarde, puis le studio).'],en:['Options: a “Back to the hub” button, in the same order as the studio’s other games (sound, language, save, then the studio).']},
  {v:'1.0.4',d:['26 octobre 2026','26 October 2026'],fr:['Options : crédits du jeu ; « Bruitages » au lieu de « Effets sonores », comme dans les autres jeux du studio.'],en:['Options: game credits.']},
  {v:'1.0.3',d:['19 octobre 2026','19 October 2026'],fr:['Options : sauvegarde à exporter ou importer, signaler un bug, soutenir le studio, retour à l’écran titre.'],en:['Options: save export and import, bug report, support the studio, back to the title screen.']},
