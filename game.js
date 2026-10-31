@@ -1793,7 +1793,7 @@ function shFrame(dt,T){
 
 
 /* ---------- musique ---------- */
-const MUS_SRC={calm:'a/mus_calm.mp3',mission:'a/mus_mission.mp3',boss:'a/mus_boss.mp3'};
+const MUS_SRC={calm:'a/mus_calm.mp3?v=244fe6d5',mission:'a/mus_mission.mp3?v=eb4d4738',boss:'a/mus_boss.mp3?v=59e878ca'};
 const TITLE_BG='a/title.webp';
 const MUS={tracks:{},want:'calm',duck:1,unlocked:false};
 function musInit(){for(const k in MUS_SRC){const a=new Audio();a.loop=true;a.preload=k==='calm'?'auto':'none';a.volume=0;a.src=MUS_SRC[k];MUS.tracks[k]={a,v:0}}}
@@ -1895,7 +1895,7 @@ function setLang(l){
 
 /* ---------- notes de mise à jour (la plus récente en premier) ---------- */
 const PATCH_NOTES=[
- {v:'1.0.7',d:['31 octobre 2026','31 October 2026'],fr:['Le voile derrière les fenêtres est plus léger : on voit la planète dès le journal de bord.','Au toucher, plus de cadre autour du premier bouton des fenêtres (il reste au clavier).','Textes des panneaux plus grands (descriptions, conseils, alertes).'],en:['The veil behind windows is lighter: you can see the planet from the ship’s log onward.','On touch screens, no more outline around a window’s first button (it stays for keyboard users).','Larger text in panels (descriptions, tips, warnings).']},
+ {v:'1.0.7',d:['31 octobre 2026','31 October 2026'],fr:['Le voile derrière les fenêtres est plus léger : on voit la planète dès le journal de bord.','Au toucher, plus de cadre autour du premier bouton des fenêtres (il reste au clavier).','Textes des panneaux plus grands (descriptions, conseils, alertes).','Les mises à jour du jeu ne retéléchargent plus les musiques (6 Mo) quand elles n’ont pas changé.'],en:['The veil behind windows is lighter: you can see the planet from the ship’s log onward.','On touch screens, no more outline around a window’s first button (it stays for keyboard users).','Larger text in panels (descriptions, tips, warnings).','Game updates no longer re-download the music (6 MB) when it hasn’t changed.']},
  {v:'1.0.6',d:['31 octobre 2026','31 October 2026'],fr:['Boutons plus faciles à toucher au pouce : Options, Fermer, Renommer, Pause, Plans, langue et volumes.','Clavier : Entrée lance la partie depuis l’écran titre, et le focus reste dans la fenêtre ou le panneau ouvert.','Lecteur d’écran : chaque case du hangar dit ce qu’elle contient.'],en:['Buttons easier to tap with a thumb: Options, Close, Rename, Pause, Blueprints, language and volume.','Keyboard: Enter starts the game from the title screen, and focus stays inside the open window or panel.','Screen reader: each hangar cell says what it holds.']},
  {v:'1.0.5',d:['29 octobre 2026','29 October 2026'],fr:['Options : bouton « Retour au hub », et le même ordre que dans les autres jeux du studio (son, langue, sauvegarde, puis le studio).'],en:['Options: a “Back to the hub” button, in the same order as the studio’s other games (sound, language, save, then the studio).']},
  {v:'1.0.4',d:['26 octobre 2026','26 October 2026'],fr:['Options : crédits du jeu ; « Bruitages » au lieu de « Effets sonores », comme dans les autres jeux du studio.'],en:['Options: game credits.']},

@@ -20,8 +20,12 @@ def data_uri(name):
     mime = 'audio/mpeg' if name.endswith('.mp3') else 'image/webp'
     return 'data:%s;base64,%s' % (mime, base64.b64encode(open(os.path.join(ROOT, 'a', name), 'rb').read()).decode())
 
+def mp3_ver(name):
+    # empreinte du fichier : l'adresse ne change que si la musique change, le service worker peut alors garder l'ancienne copie
+    return hashlib.sha1(open(os.path.join(ROOT, 'a', name), 'rb').read()).hexdigest()[:8]
+
 def assemble(inline):
-    ref = data_uri if inline else (lambda n: 'a/' + n)
+    ref = data_uri if inline else (lambda n: 'a/' + n + ('?v=' + mp3_ver(n) if n.endswith('.mp3') else ''))
     js = ''.join(read(os.path.join(SRC, f)) + '\n' for f in JS_FILES)
     for key, names in IMG.items():
         js = js.replace('/*%s*/[]' % key, '[' + ','.join("'%s'" % ref(n) for n in names) + ']')
@@ -93,7 +97,7 @@ def site():
     files = ['./', './index.html', './game.js?v=' + h, './style.css?v=' + h, './manifest.webmanifest']
     for d in ['icons', 'fonts', 'a']:
         for f in sorted(os.listdir(os.path.join(ROOT, d))):
-            if not f.endswith('.txt'): files.append('./%s/%s' % (d, f))
+            if not f.endswith('.txt'): files.append('./%s/%s' % (d, f) + ('?v=' + mp3_ver(f) if f.endswith('.mp3') else ''))
     sw = read(os.path.join(SRC, 'sw.template.js')).replace('__VERSION__', 'oxyblox-%s-%s' % (ver, h)).replace('__FILES__', ',\n  '.join("'%s'" % f for f in files))
     open(os.path.join(ROOT, 'sw.js'), 'w', encoding='utf-8').write(sw)
     print('site', ver, h, 'game.js', len(js), 'style.css', len(css), 'fichiers en cache', len(files))

@@ -6,7 +6,13 @@ const CORE = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)));
+  // Les musiques (6 Mo, adresse avec l'empreinte du fichier ?v=) sont reprises de la version précédente
+  // quand elles n'ont pas changé : une mise à jour du jeu ne les retélécharge plus.
+  const mp3 = f => f.includes('.mp3');
+  e.waitUntil(caches.open(VERSION).then(c => Promise.all([
+    c.addAll(CORE.filter(f => !mp3(f))),
+    ...CORE.filter(mp3).map(f => caches.match(f).then(hit => hit ? c.put(f, hit) : c.add(f)))
+  ])));
 });
 
 self.addEventListener('activate', e => {
