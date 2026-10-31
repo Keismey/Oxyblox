@@ -1,11 +1,11 @@
 // Oxyblox — service worker (généré par src/build.py, ne pas modifier sw.js à la main).
 // Met tout le jeu en cache pour jouer hors ligne ; une nouvelle version propose « Mettre à jour ».
-const VERSION = 'oxyblox-1.0.6-1dba0447';
+const VERSION = 'oxyblox-1.0.6-014e4dfa';
 const CORE = [
   './',
   './index.html',
-  './game.js?v=1dba0447',
-  './style.css?v=1dba0447',
+  './game.js?v=014e4dfa',
+  './style.css?v=014e4dfa',
   './manifest.webmanifest',
   './icons/apple-touch-icon.png',
   './icons/favicon.png',

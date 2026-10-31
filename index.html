@@ -28,7 +28,7 @@
 <meta name="apple-mobile-web-app-title" content="Oxyblox">
 <link rel="preload" href="fonts/oxanium.woff" as="font" type="font/woff" crossorigin>
 <link rel="preload" href="fonts/barlow-500.woff" as="font" type="font/woff" crossorigin>
-<link rel="stylesheet" href="style.css?v=1dba0447">
+<link rel="stylesheet" href="style.css?v=014e4dfa">
 </head><body>
 <div id="app">
   <canvas id="bg"></canvas>
@@ -62,8 +62,8 @@
   <div id="toast" aria-live="polite"></div>
   <div id="flash"></div>
   <div id="scrim" data-act="closeSheet"></div>
-  <div id="sheet"><div class="grab"></div><button class="shx" data-act="closeSheet" aria-label="Fermer"></button><div id="sheetc"></div></div>
-  <div id="modal" hidden role="dialog" aria-modal="true"><div class="mbox" id="mbox"></div></div>
+  <div id="sheet" role="dialog" aria-modal="true" tabindex="-1"><div class="grab"></div><button class="shx" data-act="closeSheet" aria-label="Fermer"></button><div id="sheetc"></div></div>
+  <div id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="mttl"><div class="mbox" id="mbox" tabindex="-1"></div></div>
   <div id="rot"><svg viewBox="0 0 24 24"><path d="M7 3h10v18H7z M11 18h2"/></svg><span></span></div>
   <div id="spl">
     <div class="tt">
@@ -74,7 +74,7 @@
   </div>
 </div>
 
-<script src="game.js?v=1dba0447"></script>
+<script src="game.js?v=014e4dfa"></script>
 
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "cdb82226cd1b401d9e4f4e899f9b8425"}'></script><!-- End Cloudflare Web Analytics -->
 </body></html>
