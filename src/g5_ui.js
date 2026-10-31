@@ -1,5 +1,6 @@
 /* ---------- notes de mise à jour (la plus récente en premier) ---------- */
 const PATCH_NOTES=[
+ {v:'1.0.7',d:['31 octobre 2026','31 October 2026'],fr:['Le voile derrière les fenêtres est plus léger : on voit la planète dès le journal de bord.','Au toucher, plus de cadre autour du premier bouton des fenêtres (il reste au clavier).'],en:['The veil behind windows is lighter: you can see the planet from the ship’s log onward.','On touch screens, no more outline around a window’s first button (it stays for keyboard users).']},
  {v:'1.0.6',d:['31 octobre 2026','31 October 2026'],fr:['Boutons plus faciles à toucher au pouce : Options, Fermer, Renommer, Pause, Plans, langue et volumes.','Clavier : Entrée lance la partie depuis l’écran titre, et le focus reste dans la fenêtre ou le panneau ouvert.','Lecteur d’écran : chaque case du hangar dit ce qu’elle contient.'],en:['Buttons easier to tap with a thumb: Options, Close, Rename, Pause, Blueprints, language and volume.','Keyboard: Enter starts the game from the title screen, and focus stays inside the open window or panel.','Screen reader: each hangar cell says what it holds.']},
  {v:'1.0.5',d:['29 octobre 2026','29 October 2026'],fr:['Options : bouton « Retour au hub », et le même ordre que dans les autres jeux du studio (son, langue, sauvegarde, puis le studio).'],en:['Options: a “Back to the hub” button, in the same order as the studio’s other games (sound, language, save, then the studio).']},
  {v:'1.0.4',d:['26 octobre 2026','26 October 2026'],fr:['Options : crédits du jeu ; « Bruitages » au lieu de « Effets sonores », comme dans les autres jeux du studio.'],en:['Options: game credits.']},
@@ -23,6 +24,9 @@ function lockFocus(){
  const sp=$('spl'),m=!$('modal').hidden,sh=!!SHEET,top=m?$('modal'):sp&&!sp.classList.contains('out')?sp:sh?$('sheet'):null;
  for(const el of $('app').children)el.inert=top?el!==top&&!(el.id==='upd'&&top.id==='sheet'):el.id==='sheet'&&!sh;
 }
+// cadre de focus seulement au clavier : après un toucher, le focus posé par le jeu sur un bouton reste invisible
+addEventListener('pointerdown',e=>{if(e.isTrusted)document.documentElement.classList.remove('kbd')},true);
+addEventListener('keydown',e=>{if(/^(Tab|Enter| |Escape|Arrow)/.test(e.key))document.documentElement.classList.add('kbd')},true);
 // on retient l'élément et son data-act/data-arg : s'il a été redessiné entre-temps, on retrouve son remplaçant
 function fKey(el){return el&&el!==document.body&&el.dataset?{el,act:el.dataset.act,arg:el.dataset.arg}:null}
 const focusable=el=>el&&el.focus&&document.contains(el)&&!el.disabled&&!el.closest('[inert],[hidden]');

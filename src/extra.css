@@ -127,3 +127,6 @@ ul.tips{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:
 #upd .x{width:44px;height:44px;margin:-7px -6px -7px 0}
 /* 1.0.6 : focus clavier posé sur la fenêtre ou la feuille elle-même, sans cadre */
 #sheet:focus,#mbox:focus{outline:none}
+/* 1.0.7 : voile des fenêtres plus léger, le décor reste visible derrière (la fenêtre elle-même est opaque) */
+#modal{background:#05070d8c}
+html:not(.kbd) button:focus-visible{outline:none}
