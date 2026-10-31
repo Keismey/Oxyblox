@@ -6,7 +6,13 @@ const CORE = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)));
+  // Les musiques (6 Mo, adresse avec l'empreinte du fichier ?v=) sont reprises de la version précédente
+  // quand elles n'ont pas changé : une mise à jour du jeu ne les retélécharge plus.
+  const mp3 = f => new URL(f, location).pathname.endsWith('.mp3');
+  e.waitUntil(caches.open(VERSION).then(c => Promise.all([
+    c.addAll(CORE.filter(f => !mp3(f))),
+    ...CORE.filter(mp3).map(f => caches.match(f).then(hit => hit && hit.status === 200 ? c.put(f, hit) : c.add(f)))
+  ])));
 });
 
 self.addEventListener('activate', e => {
@@ -32,7 +38,7 @@ self.addEventListener('fetch', e => {
   // les musiques sont lues par plages (Range) : on découpe la réponse en cache (206) pour Safari comme Chrome
   const range = req.headers.get('range');
   if (range && url.pathname.endsWith('.mp3')) {
-    e.respondWith(caches.match(req, { ignoreSearch: true }).then(async hit => {
+    e.respondWith(caches.match(req).then(hit => hit || caches.match(req, { ignoreSearch: true })).then(async hit => {
       if (!hit) return fetch(req);
       const buf = await hit.arrayBuffer(), m = /bytes=(\d*)-(\d*)/.exec(range) || [];
       const start = m[1] ? +m[1] : 0, end = m[2] ? Math.min(+m[2], buf.byteLength - 1) : buf.byteLength - 1;

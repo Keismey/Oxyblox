@@ -130,3 +130,5 @@ ul.tips{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:
 /* 1.0.7 : voile des fenêtres plus léger, le décor reste visible derrière (la fenêtre elle-même est opaque) */
 #modal{background:#05070d8c}
 html:not(.kbd) button:focus-visible{outline:none}
+/* 1.0.7 : textes courants des panneaux à 15 px (comme le corps du jeu) au lieu de 13 */
+.vt span,.sh-h p,.why,.li p,.tip,.req div,.warn,.tst,.plan p{font-size:15px}
